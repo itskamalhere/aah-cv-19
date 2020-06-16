@@ -1,5 +1,7 @@
 {
   "name": "AAH CV19",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "angular"
 }

@@ -1,21 +1,21 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Blank
+      <strong>Annai Arul Hospital - CV19</strong>
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <div id="container">
-    <strong>AAH CV19 App</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-    <p>Git Clone Works</p>
+  <div id="container">    
+    <ion-icon *ngIf="authService.authSuccess" class="icon-ctrl" name="checkmark-circle-outline"></ion-icon><br>
+    <ion-button routerLink="/patient-list" routerDirection="forward">
+      <ion-label>Patient List</ion-label>
+    </ion-button>
+    <strong>{{ authService.authStatus }}</strong>
+    <div *ngIf="authService.authError && authService.authError.length > 0">
+      <p>{{ authService.authError }}</p>
+      <p>Device ID {{ authService.uuid }}</p>
+    </div>
   </div>
 </ion-content>
