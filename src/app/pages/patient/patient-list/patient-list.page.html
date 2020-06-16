@@ -1,0 +1,20 @@
+<ion-header>
+    <ion-toolbar>
+      <ion-title>PatientList</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  
+  <ion-content>
+    <ion-card (click)="getDetailsPage()"  *ngFor="let patientDetail of patientDetails">
+      <ion-item>
+        <ion-avatar slot="start">
+          <img src="https://gravatar.com/avatar/dba6bae8c566f9d4041fb9cd9ada7741?d=identicon&f=y">
+        </ion-avatar>
+        <ion-label> {{patientDetail.firstName}} - {{patientDetail.lastName}}
+        </ion-label>
+      </ion-item>  
+      <ion-card-content>
+        {{patientDetail.aadharNo}}
+      </ion-card-content>
+    </ion-card>
+  </ion-content>
