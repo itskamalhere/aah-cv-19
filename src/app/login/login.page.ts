@@ -20,8 +20,8 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewInit {
   statusLabel: string = "";
   biometricSub: Subscription;
   userSub: Subscription;
-  numbers: number[] = [1,2,3,4,5,6,7,8,9];
-  zero: number = 0;
+  numbers: string[] = ["1","2","3","4","5","6","7","8","9"];
+  zero: string = "0";
   passCode: string;
   deviceId: string;
   @ViewChild("statusTemplate") private statusTemplate: TemplateRef<object>;

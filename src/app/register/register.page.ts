@@ -40,8 +40,8 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
   fsCredential;
   deviceId: string;
   gcmToken: string;
-  numbers: number[] = [1,2,3,4,5,6,7,8,9];
-  zero: number = 0;
+  numbers: string[] = ["1","2","3","4","5","6","7","8","9"];
+  zero: string = "0";
   setCode: string;
   confirmCode: string;  
   @ViewChild("statusTemplate") private statusTemplate: TemplateRef<object>;

@@ -29,7 +29,7 @@
   <div>
     <ion-text><strong>{{ statusHeader }}</strong></ion-text>
     <ion-input placeholder="Enter OTP" type="tel" #otp></ion-input>
-    <ion-button (click) = "signInWithOTP(otp.value)" >Submit</ion-button>
+    <ion-button (click) = "signInWithOTP(otp.value.toString())" >Submit</ion-button>
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
     </ion-text>
