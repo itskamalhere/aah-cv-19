@@ -1,3 +1,9 @@
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -648,68 +654,368 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
   },
 
   /***/
-  "./src/app/services/node-js.service.ts":
-  /*!*********************************************!*\
-    !*** ./src/app/services/node-js.service.ts ***!
-    \*********************************************/
+  "./src/app/directives/custom.directive.ts":
+  /*!************************************************!*\
+    !*** ./src/app/directives/custom.directive.ts ***!
+    \************************************************/
 
-  /*! exports provided: NodeJSService */
+  /*! exports provided: HasPermissionsDirective, ValueChangeDirective */
 
   /***/
-  function srcAppServicesNodeJsServiceTs(module, __webpack_exports__, __webpack_require__) {
+  function srcAppDirectivesCustomDirectiveTs(module, __webpack_exports__, __webpack_require__) {
     "use strict";
 
     __webpack_require__.r(__webpack_exports__);
     /* harmony export (binding) */
 
 
-    __webpack_require__.d(__webpack_exports__, "NodeJSService", function () {
-      return NodeJSService;
+    __webpack_require__.d(__webpack_exports__, "HasPermissionsDirective", function () {
+      return HasPermissionsDirective;
     });
+    /* harmony export (binding) */
 
-    var NodeJSService = /*#__PURE__*/function () {
-      function NodeJSService() {
-        _classCallCheck(this, NodeJSService);
+
+    __webpack_require__.d(__webpack_exports__, "ValueChangeDirective", function () {
+      return ValueChangeDirective;
+    });
+    /* harmony import */
+
+
+    var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(
+    /*! tslib */
+    "./node_modules/tslib/tslib.es6.js");
+    /* harmony import */
+
+
+    var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(
+    /*! @angular/core */
+    "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+    /* harmony import */
+
+
+    var _services_session_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
+    /*! ../services/session.service */
+    "./src/app/services/session.service.ts");
+
+    var HasPermissionsDirective = /*#__PURE__*/function () {
+      function HasPermissionsDirective(session, templateRef, viewContainer) {
+        _classCallCheck(this, HasPermissionsDirective);
+
+        this.session = session;
+        this.templateRef = templateRef;
+        this.viewContainer = viewContainer;
       }
 
-      _createClass(NodeJSService, [{
-        key: "getPatientsList",
-        value: function getPatientsList() {
-          var patList = [{
-            id: "ID1",
-            firstName: "First Name",
-            lastName: "Last Name",
-            aadharNo: "Aadhaar No 1"
-          }, {
-            id: "ID2",
-            firstName: "First Name2",
-            lastName: "Last Name2",
-            aadharNo: "Aadhaar No 2"
-          }, {
-            id: "ID3",
-            firstName: "First Name3",
-            lastName: "Last Name3",
-            aadharNo: "Aadhaar No 3"
-          }];
-          return patList;
+      _createClass(HasPermissionsDirective, [{
+        key: "ngOnInit",
+        value: function ngOnInit() {
+          if (this.hasPermissions(this.permissions)) {
+            this.viewContainer.createEmbeddedView(this.templateRef);
+          } else {
+            this.viewContainer.clear();
+          }
         }
       }, {
-        key: "getPatientDetails",
-        value: function getPatientDetails() {
-          var patientDetail = {
-            id: "ID1",
-            firstName: "First Name",
-            lastName: "Last Name",
-            aadharNo: "Aadhaar No 1"
-          };
-          return patientDetail;
+        key: "hasPermissions",
+        value: function hasPermissions(permissions) {
+          var _iterator = _createForOfIteratorHelper(permissions),
+              _step;
+
+          try {
+            for (_iterator.s(); !(_step = _iterator.n()).done;) {
+              var permission = _step.value;
+
+              if (!this.session.getPermissions() || !this.session.getPermissions().includes(permission)) {
+                return false;
+              }
+            }
+          } catch (err) {
+            _iterator.e(err);
+          } finally {
+            _iterator.f();
+          }
+
+          return true;
         }
       }]);
 
-      return NodeJSService;
+      return HasPermissionsDirective;
     }();
-    /***/
 
+    HasPermissionsDirective.ctorParameters = function () {
+      return [{
+        type: _services_session_service__WEBPACK_IMPORTED_MODULE_2__["SessionService"]
+      }, {
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["TemplateRef"]
+      }, {
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["ViewContainerRef"]
+      }];
+    };
+
+    Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Input"])('hasPermissions')], HasPermissionsDirective.prototype, "permissions", void 0);
+    HasPermissionsDirective = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Directive"])({
+      selector: '[hasPermissions]'
+    })], HasPermissionsDirective);
+
+    var ValueChangeDirective = /*#__PURE__*/function () {
+      function ValueChangeDirective(viewContainer, templateRef) {
+        _classCallCheck(this, ValueChangeDirective);
+
+        this.viewContainer = viewContainer;
+        this.templateRef = templateRef;
+        this.hasView = false;
+      }
+
+      _createClass(ValueChangeDirective, [{
+        key: "valueChange",
+        set: function set(val) {
+          if (!this.hasView) {
+            this.viewContainer.createEmbeddedView(this.templateRef);
+            this.hasView = true;
+          } else if (val !== this.currentValue) {
+            this.viewContainer.clear();
+            this.viewContainer.createEmbeddedView(this.templateRef);
+            this.currentValue = val;
+          }
+        }
+      }]);
+
+      return ValueChangeDirective;
+    }();
+
+    ValueChangeDirective.ctorParameters = function () {
+      return [{
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["ViewContainerRef"]
+      }, {
+        type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["TemplateRef"]
+      }];
+    };
+
+    Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Input"])()], ValueChangeDirective.prototype, "valueChange", null);
+    ValueChangeDirective = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Directive"])({
+      selector: '[valueChange]'
+    })], ValueChangeDirective);
+    /***/
+  },
+
+  /***/
+  "./src/app/directives/shared-directives/shared-directives.module.ts":
+  /*!**************************************************************************!*\
+    !*** ./src/app/directives/shared-directives/shared-directives.module.ts ***!
+    \**************************************************************************/
+
+  /*! exports provided: SharedDirectivesModule */
+
+  /***/
+  function srcAppDirectivesSharedDirectivesSharedDirectivesModuleTs(module, __webpack_exports__, __webpack_require__) {
+    "use strict";
+
+    __webpack_require__.r(__webpack_exports__);
+    /* harmony export (binding) */
+
+
+    __webpack_require__.d(__webpack_exports__, "SharedDirectivesModule", function () {
+      return SharedDirectivesModule;
+    });
+    /* harmony import */
+
+
+    var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(
+    /*! tslib */
+    "./node_modules/tslib/tslib.es6.js");
+    /* harmony import */
+
+
+    var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(
+    /*! @angular/core */
+    "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+    /* harmony import */
+
+
+    var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
+    /*! @angular/common */
+    "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+    /* harmony import */
+
+
+    var _custom_directive__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(
+    /*! ../custom.directive */
+    "./src/app/directives/custom.directive.ts");
+
+    var SharedDirectivesModule = function SharedDirectivesModule() {
+      _classCallCheck(this, SharedDirectivesModule);
+    };
+
+    SharedDirectivesModule = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"])({
+      declarations: [_custom_directive__WEBPACK_IMPORTED_MODULE_3__["HasPermissionsDirective"], _custom_directive__WEBPACK_IMPORTED_MODULE_3__["ValueChangeDirective"]],
+      imports: [_angular_common__WEBPACK_IMPORTED_MODULE_2__["CommonModule"]],
+      exports: [_custom_directive__WEBPACK_IMPORTED_MODULE_3__["HasPermissionsDirective"], _custom_directive__WEBPACK_IMPORTED_MODULE_3__["ValueChangeDirective"]]
+    })], SharedDirectivesModule);
+    /***/
+  },
+
+  /***/
+  "./src/app/services/firebase.service.ts":
+  /*!**********************************************!*\
+    !*** ./src/app/services/firebase.service.ts ***!
+    \**********************************************/
+
+  /*! exports provided: FirebaseService */
+
+  /***/
+  function srcAppServicesFirebaseServiceTs(module, __webpack_exports__, __webpack_require__) {
+    "use strict";
+
+    __webpack_require__.r(__webpack_exports__);
+    /* harmony export (binding) */
+
+
+    __webpack_require__.d(__webpack_exports__, "FirebaseService", function () {
+      return FirebaseService;
+    });
+    /* harmony import */
+
+
+    var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(
+    /*! tslib */
+    "./node_modules/tslib/tslib.es6.js");
+    /* harmony import */
+
+
+    var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(
+    /*! @angular/core */
+    "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+    /* harmony import */
+
+
+    var _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(
+    /*! @angular/fire/firestore */
+    "./node_modules/@angular/fire/__ivy_ngcc__/fesm2015/angular-fire-firestore.js");
+    /* harmony import */
+
+
+    var rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(
+    /*! rxjs/operators */
+    "./node_modules/rxjs/_esm2015/operators/index.js");
+
+    var FirebaseService = /*#__PURE__*/function () {
+      function FirebaseService(firestore) {
+        _classCallCheck(this, FirebaseService);
+
+        this.firestore = firestore;
+        this.userCollectionName = "users";
+        this.vitalCollectionName = "vitals";
+        this.commentCollectionName = "comments";
+        this.userDb = this.firestore.collection(this.userCollectionName);
+        this.vitalDb = this.firestore.collection(this.vitalCollectionName);
+        this.commentDb = this.firestore.collection(this.commentCollectionName);
+      }
+
+      _createClass(FirebaseService, [{
+        key: "createUser",
+        value: function createUser(record) {
+          return this.userDb.add(record);
+        }
+      }, {
+        key: "fetchUserbyNo",
+        value: function fetchUserbyNo(mobileNo) {
+          var query = this.firestore.collection(this.userCollectionName, function (ref) {
+            return ref.where("mobileNumber", '==', mobileNo);
+          });
+          return this.fetchUserbyField(query);
+        }
+      }, {
+        key: "fetchUserbyField",
+        value: function fetchUserbyField(query) {
+          var _this = this;
+
+          return new Promise(function (resolve, reject) {
+            try {
+              _this.fetchUserbyNoSub = query.get().pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["map"])(function (snapshot) {
+                return snapshot.docs.map(function (a) {
+                  var data = a.data();
+                  var id = a.id;
+                  var ref = a.ref;
+                  return {
+                    id: id,
+                    ref: ref,
+                    data: data
+                  };
+                });
+              })).subscribe(function (users) {
+                return Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(_this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+                  return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                    while (1) {
+                      switch (_context3.prev = _context3.next) {
+                        case 0:
+                          resolve(users);
+
+                          if (this.fetchUserbyNoSub && !this.fetchUserbyNoSub.closed) {
+                            this.fetchUserbyNoSub.unsubscribe();
+                          }
+
+                        case 2:
+                        case "end":
+                          return _context3.stop();
+                      }
+                    }
+                  }, _callee3, this);
+                }));
+              });
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }
+      }, {
+        key: "fetchUsers",
+        value: function fetchUsers() {
+          return this.userDb.snapshotChanges().pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["map"])(function (snapshot) {
+            return snapshot.map(function (a) {
+              // const data: ItemData = a.payload.doc.data() as ItemData;
+              // const id = a.payload.doc.id;
+              // const ref = a.payload.doc.ref;  
+              // return {id,ref,data};
+              var id = a.payload.doc.id;
+              var isEdit = false;
+              var firstName = a.payload.doc.data()['firstName'];
+              var lastName = a.payload.doc.data()['lastName'];
+              var age = a.payload.doc.data()['age'];
+              return {
+                id: id,
+                isEdit: isEdit,
+                firstName: firstName,
+                lastName: lastName,
+                age: age
+              };
+            });
+          }));
+        }
+      }, {
+        key: "updateUser",
+        value: function updateUser(recordID, record) {
+          return this.firestore.doc(this.userCollectionName + '/' + recordID).update(record);
+        }
+      }, {
+        key: "deleteUser",
+        value: function deleteUser(recordID) {
+          return this.firestore.doc(this.userCollectionName + '/' + recordID)["delete"]();
+        }
+      }]);
+
+      return FirebaseService;
+    }();
+
+    FirebaseService.ctorParameters = function () {
+      return [{
+        type: _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_2__["AngularFirestore"]
+      }];
+    };
+
+    FirebaseService = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Injectable"])({
+      providedIn: 'root'
+    })], FirebaseService);
+    /***/
   }
 }]);
 //# sourceMappingURL=common-es5.js.map

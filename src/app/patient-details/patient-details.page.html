@@ -1,0 +1,33 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>PatientDetails</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  
+  <ion-content [forceOverscroll]="true">
+    <!-- <ion-card>
+        <ion-card-header>
+            {{user.firstName}} {{user.lastName}}
+        </ion-card-header>  
+        <ion-card-content>
+            {{user.aadharNo}}
+        </ion-card-content>
+    </ion-card> -->
+    
+    <canvas baseChart
+    [datasets]="chartData"
+    [labels]="chartLabels"
+    [chartType]="chartType">
+    </canvas>
+    
+    <canvas baseChart
+    [datasets]="chartData"
+    [labels]="chartLabels"
+    [chartType]="chartType">
+    </canvas>
+
+
+  </ion-content> 

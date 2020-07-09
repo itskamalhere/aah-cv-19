@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "aah-cv-19": {
+      "hosting": {
+        "app": [
+          "aah-cv-19"
+        ]
+      }
+    }
+  }
+}

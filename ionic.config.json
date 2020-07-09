@@ -1,7 +1,10 @@
 {
   "name": "AAH CV19",
   "integrations": {
-    "capacitor": {}
+    "capacitor": {},
+    "cordova": {
+      "enabled": false
+    }
   },
   "type": "angular"
 }

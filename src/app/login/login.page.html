@@ -1,0 +1,82 @@
+<ion-content [fullscreen]="true">
+  <img src="/assets/images/logo.png"><img>
+  <div id="container">   
+    <ng-container *ngTemplateOutlet="viewTemplate"></ng-container>
+  </div>
+</ion-content>
+
+<ng-template #statusTemplate>
+  <div>
+    <ion-text><strong>{{ statusHeader }}</strong></ion-text>    
+    <ion-text style="padding-top:0; white-space: pre-wrap;">
+      <p>{{ statusLabel }}</p>
+    </ion-text>
+  </div>
+</ng-template>
+
+<ng-template #passcodeTemplate>
+  <div class="passcode-css">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <ion-title>{{ statusHeader }}</ion-title>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          <ion-title>&nbsp;</ion-title>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="2">
+        </ion-col>
+        <ion-col  size="2">
+          <ion-icon *ngIf="passCode.length<=0" name="ellipse-outline"></ion-icon>
+          <ion-icon *ngIf="passCode.length>0" name="ellipse"></ion-icon>
+        </ion-col>
+        <ion-col  size="2">
+          <ion-icon *ngIf="passCode.length<=1" name="ellipse-outline"></ion-icon>
+          <ion-icon *ngIf="passCode.length>1" name="ellipse"></ion-icon>
+        </ion-col>
+        <ion-col  size="2">
+          <ion-icon *ngIf="passCode.length<=2" name="ellipse-outline"></ion-icon>
+          <ion-icon *ngIf="passCode.length>2" name="ellipse"></ion-icon>
+        </ion-col>
+        <ion-col  size="2">
+          <ion-icon *ngIf="passCode.length<=3" name="ellipse-outline"></ion-icon>
+          <ion-icon *ngIf="passCode.length>3" name="ellipse"></ion-icon>
+        </ion-col>
+        <ion-col size="2">
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col>
+          <ion-title>&nbsp;</ion-title>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="4" *ngFor="let num of numbers" >
+          <ion-button (click)="add(num)" size="large" color="medium" fill="outline" shape="round">
+            {{num}}
+          </ion-button>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col >
+          <ion-button (click)="add(zero)" size="large" color="medium" fill="outline" shape="round">
+            {{zero}}
+          </ion-button>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col  size="6">
+          <ion-button (click)="deleteCode()" color="medium" fill="outline" shape="round">          
+            <<
+          </ion-button>          
+        </ion-col>
+        <ion-col  size="6">
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+</ng-template>

@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>user-manage</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  
+  <form [formGroup]="userForm">
+
+    <ion-item>
+      <ion-label position="floating">First Name</ion-label>
+      <ion-input formControlName="firstName"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Last Name</ion-label>
+      <ion-input formControlName="lastName"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Age</ion-label>
+      <ion-input formControlName="age"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Sex</ion-label>
+      <ion-input formControlName="sex"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Mobile Number</ion-label>
+      <ion-input formControlName="mobileNumber"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Email</ion-label>
+      <ion-input formControlName="email"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Address</ion-label>
+      <ion-input formControlName="address"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Emergency Contact Name</ion-label>
+      <ion-input formControlName="emergencyContactName"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Emergency Contact Number</ion-label>
+      <ion-input formControlName="emergencyContactNumber"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">UHID</ion-label>
+      <ion-input formControlName="uhid"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Room Number</ion-label>
+      <ion-input formControlName="roomNumber"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Role</ion-label>
+      <ion-input formControlName="role"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Status</ion-label>
+      <ion-input formControlName="status"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-button (click)="createUser()" [disabled]="userForm.invalid">
+        <ion-icon size="small" slot="icon-only" name="add"></ion-icon>
+        &nbsp;Save
+      </ion-button>
+      <ion-button [disabled]="userForm.invalid">
+        <ion-icon size="small" slot="icon-only" name="add"></ion-icon>
+        &nbsp;Save Next
+      </ion-button>
+    </ion-item>
+    
+  </form>
+
+</ion-content>

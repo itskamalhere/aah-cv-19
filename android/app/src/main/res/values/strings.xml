@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">AAH CV19</string>
     <string name="title_activity_main">AAH CV19</string>
-    <string name="package_name">io.ionic.starter</string>
-    <string name="custom_url_scheme">io.ionic.starter</string>
+    <string name="package_name">com.aah.cv19</string>
+    <string name="custom_url_scheme">com.aah.cv19</string>
 </resources>

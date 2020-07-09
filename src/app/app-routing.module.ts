@@ -13,11 +13,23 @@ const routes: Routes = [
   },
   {
     path: 'patient-details',
-    loadChildren: () => import('./pages/patient/patient-details/patient-details.module').then( m => m.PatientDetailsPageModule)
+    loadChildren: () => import('./patient-details/patient-details.module').then( m => m.PatientDetailsPageModule)
   },
   {
     path: 'patient-list',
-    loadChildren: () => import('./pages/patient/patient-list/patient-list.module').then( m => m.PatientListPageModule)
+    loadChildren: () => import('./patient-list/patient-list.module').then( m => m.PatientListPageModule)
+  },
+  {
+    path: 'register',
+    loadChildren: () => import('./register/register.module').then( m => m.RegisterPageModule)
+  },
+  {
+    path: 'login',
+    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+  },
+  {
+    path: 'user-manage',
+    loadChildren: () => import('./user-manage/user-manage.module').then( m => m.UserManagePageModule)
   },
 ];
 

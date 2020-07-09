@@ -424,50 +424,214 @@ const openURL = async (url, ev, direction, animation) => {
 
 /***/ }),
 
-/***/ "./src/app/services/node-js.service.ts":
-/*!*********************************************!*\
-  !*** ./src/app/services/node-js.service.ts ***!
-  \*********************************************/
-/*! exports provided: NodeJSService */
+/***/ "./src/app/directives/custom.directive.ts":
+/*!************************************************!*\
+  !*** ./src/app/directives/custom.directive.ts ***!
+  \************************************************/
+/*! exports provided: HasPermissionsDirective, ValueChangeDirective */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "NodeJSService", function() { return NodeJSService; });
-class NodeJSService {
-    getPatientsList() {
-        let patList = [
-            {
-                id: "ID1",
-                firstName: "First Name",
-                lastName: "Last Name",
-                aadharNo: "Aadhaar No 1"
-            },
-            {
-                id: "ID2",
-                firstName: "First Name2",
-                lastName: "Last Name2",
-                aadharNo: "Aadhaar No 2"
-            },
-            {
-                id: "ID3",
-                firstName: "First Name3",
-                lastName: "Last Name3",
-                aadharNo: "Aadhaar No 3"
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HasPermissionsDirective", function() { return HasPermissionsDirective; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ValueChangeDirective", function() { return ValueChangeDirective; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var _services_session_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/session.service */ "./src/app/services/session.service.ts");
+
+
+
+let HasPermissionsDirective = class HasPermissionsDirective {
+    constructor(session, templateRef, viewContainer) {
+        this.session = session;
+        this.templateRef = templateRef;
+        this.viewContainer = viewContainer;
+    }
+    ngOnInit() {
+        if (this.hasPermissions(this.permissions)) {
+            this.viewContainer.createEmbeddedView(this.templateRef);
+        }
+        else {
+            this.viewContainer.clear();
+        }
+    }
+    hasPermissions(permissions) {
+        for (const permission of permissions) {
+            if (!this.session.getPermissions() || !this.session.getPermissions().includes(permission)) {
+                return false;
             }
-        ];
-        return patList;
+        }
+        return true;
     }
-    getPatientDetails() {
-        let patientDetail = {
-            id: "ID1",
-            firstName: "First Name",
-            lastName: "Last Name",
-            aadharNo: "Aadhaar No 1"
-        };
-        return patientDetail;
+};
+HasPermissionsDirective.ctorParameters = () => [
+    { type: _services_session_service__WEBPACK_IMPORTED_MODULE_2__["SessionService"] },
+    { type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["TemplateRef"] },
+    { type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["ViewContainerRef"] }
+];
+Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Input"])('hasPermissions')
+], HasPermissionsDirective.prototype, "permissions", void 0);
+HasPermissionsDirective = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Directive"])({ selector: '[hasPermissions]' })
+], HasPermissionsDirective);
+
+let ValueChangeDirective = class ValueChangeDirective {
+    constructor(viewContainer, templateRef) {
+        this.viewContainer = viewContainer;
+        this.templateRef = templateRef;
+        this.hasView = false;
     }
-}
+    set valueChange(val) {
+        if (!this.hasView) {
+            this.viewContainer.createEmbeddedView(this.templateRef);
+            this.hasView = true;
+        }
+        else if (val !== this.currentValue) {
+            this.viewContainer.clear();
+            this.viewContainer.createEmbeddedView(this.templateRef);
+            this.currentValue = val;
+        }
+    }
+};
+ValueChangeDirective.ctorParameters = () => [
+    { type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["ViewContainerRef"] },
+    { type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["TemplateRef"] }
+];
+Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Input"])()
+], ValueChangeDirective.prototype, "valueChange", null);
+ValueChangeDirective = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Directive"])({ selector: '[valueChange]' })
+], ValueChangeDirective);
+
+
+
+/***/ }),
+
+/***/ "./src/app/directives/shared-directives/shared-directives.module.ts":
+/*!**************************************************************************!*\
+  !*** ./src/app/directives/shared-directives/shared-directives.module.ts ***!
+  \**************************************************************************/
+/*! exports provided: SharedDirectivesModule */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SharedDirectivesModule", function() { return SharedDirectivesModule; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/__ivy_ngcc__/fesm2015/common.js");
+/* harmony import */ var _custom_directive__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../custom.directive */ "./src/app/directives/custom.directive.ts");
+
+
+
+
+let SharedDirectivesModule = class SharedDirectivesModule {
+};
+SharedDirectivesModule = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"])({
+        declarations: [_custom_directive__WEBPACK_IMPORTED_MODULE_3__["HasPermissionsDirective"], _custom_directive__WEBPACK_IMPORTED_MODULE_3__["ValueChangeDirective"]],
+        imports: [
+            _angular_common__WEBPACK_IMPORTED_MODULE_2__["CommonModule"]
+        ],
+        exports: [_custom_directive__WEBPACK_IMPORTED_MODULE_3__["HasPermissionsDirective"], _custom_directive__WEBPACK_IMPORTED_MODULE_3__["ValueChangeDirective"]]
+    })
+], SharedDirectivesModule);
+
+
+
+/***/ }),
+
+/***/ "./src/app/services/firebase.service.ts":
+/*!**********************************************!*\
+  !*** ./src/app/services/firebase.service.ts ***!
+  \**********************************************/
+/*! exports provided: FirebaseService */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FirebaseService", function() { return FirebaseService; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/__ivy_ngcc__/fesm2015/core.js");
+/* harmony import */ var _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/fire/firestore */ "./node_modules/@angular/fire/__ivy_ngcc__/fesm2015/angular-fire-firestore.js");
+/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm2015/operators/index.js");
+
+
+
+
+let FirebaseService = class FirebaseService {
+    constructor(firestore) {
+        this.firestore = firestore;
+        this.userCollectionName = "users";
+        this.vitalCollectionName = "vitals";
+        this.commentCollectionName = "comments";
+        this.userDb = this.firestore.collection(this.userCollectionName);
+        this.vitalDb = this.firestore.collection(this.vitalCollectionName);
+        this.commentDb = this.firestore.collection(this.commentCollectionName);
+    }
+    createUser(record) {
+        return this.userDb.add(record);
+    }
+    fetchUserbyNo(mobileNo) {
+        let query = this.firestore.collection(this.userCollectionName, ref => ref.where("mobileNumber", '==', mobileNo));
+        return this.fetchUserbyField(query);
+    }
+    fetchUserbyField(query) {
+        return new Promise((resolve, reject) => {
+            try {
+                this.fetchUserbyNoSub = query.get().pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["map"])(snapshot => {
+                    return snapshot.docs.map(a => {
+                        const data = a.data();
+                        const id = a.id;
+                        const ref = a.ref;
+                        return { id, ref, data };
+                    });
+                })).subscribe((users) => Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"])(this, void 0, void 0, function* () {
+                    resolve(users);
+                    if (this.fetchUserbyNoSub && !this.fetchUserbyNoSub.closed) {
+                        this.fetchUserbyNoSub.unsubscribe();
+                    }
+                }));
+            }
+            catch (e) {
+                reject(e);
+            }
+        });
+    }
+    fetchUsers() {
+        return this.userDb.snapshotChanges().pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["map"])(snapshot => {
+            return snapshot.map(a => {
+                // const data: ItemData = a.payload.doc.data() as ItemData;
+                // const id = a.payload.doc.id;
+                // const ref = a.payload.doc.ref;  
+                // return {id,ref,data};
+                const id = a.payload.doc.id;
+                const isEdit = false;
+                const firstName = a.payload.doc.data()['firstName'];
+                const lastName = a.payload.doc.data()['lastName'];
+                const age = a.payload.doc.data()['age'];
+                return { id, isEdit, firstName, lastName, age };
+            });
+        }));
+    }
+    updateUser(recordID, record) {
+        return this.firestore.doc(this.userCollectionName + '/' + recordID).update(record);
+    }
+    deleteUser(recordID) {
+        return this.firestore.doc(this.userCollectionName + '/' + recordID).delete();
+    }
+};
+FirebaseService.ctorParameters = () => [
+    { type: _angular_fire_firestore__WEBPACK_IMPORTED_MODULE_2__["AngularFirestore"] }
+];
+FirebaseService = Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"])([
+    Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Injectable"])({
+        providedIn: 'root'
+    })
+], FirebaseService);
+
 
 
 /***/ })
