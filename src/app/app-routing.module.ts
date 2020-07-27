@@ -31,6 +31,10 @@ const routes: Routes = [
     path: 'user-manage',
     loadChildren: () => import('./user-manage/user-manage.module').then( m => m.UserManagePageModule)
   },
+  {
+    path: 'manage-vitals',
+    loadChildren: () => import('./manage-vitals/manage-vitals.module').then( m => m.ManageVitalsPageModule)
+  },
 ];
 
 @NgModule({

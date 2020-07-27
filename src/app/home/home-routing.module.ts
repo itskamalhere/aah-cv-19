@@ -8,7 +8,7 @@ const routes: Routes = [
     component: HomePage,
     children: [
       {
-        path: 'tab1',
+        path: 'home',
         children: [
           {
             path: '',
@@ -35,7 +35,7 @@ const routes: Routes = [
         ]
       },
       {
-        path: 'tab4',
+        path: 'staff-list',
         children: [
           {
             path: '',
@@ -44,7 +44,7 @@ const routes: Routes = [
         ]
       },
       {
-        path: 'tab5',
+        path: 'notifications',
         children: [
           {
             path: '',

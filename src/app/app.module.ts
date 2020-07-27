@@ -5,8 +5,10 @@ import { RouteReuseStrategy } from '@angular/router';
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 
 import { AngularFireModule } from '@angular/fire';
+import { AngularFireAuthModule } from '@angular/fire/auth';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
 import { AngularFireStorageModule } from '@angular/fire/storage';
+import { AngularFireFunctionsModule, ORIGIN } from '@angular/fire/functions';
 import { environment } from '../environments/environment';
 
 import { AppComponent } from './app.component';
@@ -16,6 +18,7 @@ import { FingerprintAIO } from '@ionic-native/fingerprint-aio/ngx';
 import { FirebaseX } from '@ionic-native/firebase-x/ngx';
 import { AppPreferences } from '@ionic-native/app-preferences/ngx';
 import { SessionService } from './services/session.service';
+import { ServiceWorkerModule } from '@angular/service-worker';
 
 @NgModule({
   declarations: [AppComponent],
@@ -28,11 +31,15 @@ import { SessionService } from './services/session.service';
     AngularFireModule.initializeApp(environment.firebaseConfig),
     AngularFirestoreModule,
     //AngularFirestoreModule.enablePersistence(),
-    AngularFireStorageModule
+    AngularFireStorageModule,
+    AngularFireAuthModule,
+    AngularFireFunctionsModule,    
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
   ],
   providers: [
     FingerprintAIO,FirebaseX,AppPreferences,SessionService,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
+    //{ provide: ORIGIN, useValue: 'https://aah-cv-19.web.app' }
   ],
   bootstrap: [AppComponent]
 })

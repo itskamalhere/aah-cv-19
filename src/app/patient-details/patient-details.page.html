@@ -1,33 +1,202 @@
 <ion-header>
     <ion-toolbar>
         <ion-buttons slot="start">
-            <ion-back-button></ion-back-button>
+            <ion-back-button defaultHref="home/patient-list"></ion-back-button>
         </ion-buttons>
         <ion-title>PatientDetails</ion-title>
     </ion-toolbar>
-  </ion-header>
-  
-  <ion-content [forceOverscroll]="true">
-    <!-- <ion-card>
-        <ion-card-header>
-            {{user.firstName}} {{user.lastName}}
-        </ion-card-header>  
-        <ion-card-content>
-            {{user.aadharNo}}
-        </ion-card-content>
-    </ion-card> -->
-    
-    <canvas baseChart
-    [datasets]="chartData"
-    [labels]="chartLabels"
-    [chartType]="chartType">
-    </canvas>
-    
-    <canvas baseChart
-    [datasets]="chartData"
-    [labels]="chartLabels"
-    [chartType]="chartType">
-    </canvas>
+</ion-header>
 
+<ion-content [forceOverscroll]="true">
+    <ion-segment [(ngModel)]="segment">
+        <ion-segment-button value="details">
+            <ion-label>Details</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="reports">
+            <ion-label>Reports</ion-label>
+        </ion-segment-button>
+    </ion-segment>
+    <div [ngSwitch]="segment">
+        <div *ngSwitchCase="'details'">
+            <div class="detailsView2">
+                <ion-card *ngIf="user">
+                    <ion-card-header>
+                        <ion-item>
+                            <ion-avatar slot="start">
+                                <img src="../assets/images/male.png">
+                            </ion-avatar>
+                            <ion-label>{{user.firstName}} {{user.lastName}}</ion-label>
+                        </ion-item>
+                        <ion-card-subtitle>UH ID - {{user.uhid}}</ion-card-subtitle>
+                    </ion-card-header>
+              
+                    <ion-card-content>
+                        <ion-grid>
+                            <ion-row>
+                                <ion-col size="4">
+                                    DOB
+                                </ion-col>
+                                <ion-col size="8">
+                                  {{user.dob | dateformat}}
+                                </ion-col>
+                            </ion-row>
+                            <ion-row>
+                                <ion-col size="4">
+                                    Address
+                                </ion-col>
+                                <ion-col size="8">
+                                  {{user.homeAddress}}
+                                </ion-col>
+                            </ion-row>
+                            <ion-row>
+                                <ion-col size="4">
+                                    Mobile Number
+                                </ion-col>
+                                <ion-col size="8">
+                                  {{user.mobileNumber}}
+                                </ion-col>
+                            </ion-row>
+                        </ion-grid>
+                    </ion-card-content>
+                </ion-card>
+            </div>
+            <ion-item>
+                <ion-label>
+                    Vitals
+                </ion-label>
+            </ion-item>
+            <ion-card *ngFor="let vital of userDetails.vitals">
+                <ion-card-header>
+                    <ion-card-subtitle>{{vital.submittedDate | timeformat}}  - {{vital.submittedBy}} (submitted by)</ion-card-subtitle>
+                </ion-card-header>
 
-  </ion-content> 
+                <ion-card-content>
+                    <ion-grid>
+                        <ion-row>
+                            <ion-col size="6">
+                                <ion-chip>
+                                    <ion-icon name="thermometer-outline"></ion-icon>
+                                    <ion-label> Temp - {{vital.temperature}}&deg;C</ion-label>
+                                </ion-chip>
+                            </ion-col>
+                            <ion-col size="6">
+                                <ion-chip>
+                                    <ion-icon name="flower-outline"></ion-icon>
+                                    <ion-label> SPO2 - {{vital.spo2}}</ion-label>
+                                </ion-chip>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row>
+                            <ion-col size="6">
+                                <ion-chip>
+                                    <ion-icon name="heart-outline"></ion-icon>
+                                    <ion-label> BP - {{vital.bpSystolic}}/{{vital.bpDiastolic}}</ion-label>
+                                </ion-chip>
+                            </ion-col>
+                            <ion-col size="6">
+                                <ion-chip>
+                                    <ion-icon name="heart-outline"></ion-icon>
+                                    <ion-label> BP - {{vital.bpSystolic}}/{{vital.bpDiastolic}}</ion-label>
+                                </ion-chip>
+                            </ion-col>
+                        </ion-row>
+                    </ion-grid>
+                </ion-card-content>
+            </ion-card>
+        </div>
+        <div *ngSwitchCase="'reports'">
+            <ion-segment [(ngModel)]="displayBy" (ionChange)="changeDisplayBy()">
+                <ion-segment-button class="ion-segment-button-css" value="day">
+                    <ion-label color="dark">Day</ion-label>
+                </ion-segment-button>
+                <ion-segment-button class="ion-segment-button-css" value="week">
+                    <ion-label color="dark">Week</ion-label>
+                </ion-segment-button>
+                <ion-segment-button class="ion-segment-button-css" value="month">
+                    <ion-label color="dark">Month</ion-label>
+                </ion-segment-button>
+                <ion-segment-button class="ion-segment-button-css" value="year">
+                    <ion-label color="dark">Year</ion-label>
+                </ion-segment-button>
+            </ion-segment>
+            <ion-grid>
+                <ion-row>
+                    <ion-col class="ion-no-padding ion-text-center ion-align-self-center" size="1.5">
+                        <ion-button disabled="{{disableDecrease}}" (click)="reduceDateRange()" size="small"
+                            shape="round">
+                            <ion-icon name="arrow-back-outline"></ion-icon>
+                        </ion-button>
+                    </ion-col>
+                    <ion-col *ngIf="displayBy == 'day'" size="9">
+                        <ion-item>
+                            <ion-datetime style="width: 100%; text-align: center;" (ionChange)="onChangeDate()"
+                                [(ngModel)]="selectedDate" displayFormat="DD-MMM-YY" min="{{vitalsStartDate}}"
+                                max="{{vitalsEndDate}}">
+                            </ion-datetime>
+                        </ion-item>
+                    </ion-col>
+                    <ion-col *ngIf="displayBy == 'week'" size="4.5">
+                        <ion-item>
+                            <ion-datetime disabled="true" style="width: 100%; text-align: center;"
+                                [(ngModel)]="weekStartDate" displayFormat="DD-MMM-YY">
+                            </ion-datetime>
+                        </ion-item>
+                    </ion-col>
+                    <ion-col *ngIf="displayBy == 'week'" size="4.5">
+                        <ion-item>
+                            <ion-datetime disabled="true" style="width: 100%; text-align: center;"
+                                [(ngModel)]="weekEndDate" displayFormat="DD-MMM-YY">
+                            </ion-datetime>
+                        </ion-item>
+                    </ion-col>
+                    <ion-col *ngIf="displayBy == 'month'" size="9">
+                        <ion-item>
+                            <ion-datetime disabled="true" style="width: 100%; text-align: center;"
+                                [(ngModel)]="monthDate" displayFormat="MMM-YY" min="{{vitalsStartDate}}"
+                                max="{{vitalsEndDate}}">
+                            </ion-datetime>
+                        </ion-item>
+                    </ion-col>
+                    <ion-col *ngIf="displayBy == 'year'" size="9">
+                        <ion-item>
+                            <ion-datetime disabled="true" style="width: 100%; text-align: center;"
+                                [(ngModel)]="monthDate" displayFormat="YYYY" min="{{vitalsStartDate}}"
+                                max="{{vitalsEndDate}}">
+                            </ion-datetime>
+                        </ion-item>
+                    </ion-col>
+                    <ion-col class="ion-no-padding ion-text-center ion-align-self-center" size="1.5">
+                        <ion-button disabled="{{disableIncrease}}" (click)="increaseDateRange()" size="small"
+                            shape="round">
+                            <ion-icon name="arrow-forward-outline"></ion-icon>
+                        </ion-button>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
+            <ion-list>
+                <ion-grid>
+                    <ion-row *ngFor="let vitalChartConfig of vitalsChartConfigs">
+                        <ion-col>
+                            <canvas baseChart [datasets]="vitalChartConfig.chartData"
+                                [labels]="vitalChartConfig.chartLabels" [options]="vitalChartConfig.chartOptions"
+                                [colors]="vitalChartConfig.chartColors" [legend]="vitalChartConfig.showLegend"
+                                [chartType]="vitalChartConfig.chartType">
+                            </canvas>
+                        </ion-col>
+                    </ion-row>
+                </ion-grid>
+            </ion-list>
+        </div>
+    </div>
+    <ion-fab *ngIf="segment == 'details'" (click)="showVitalsPage()" vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button>
+            <ion-icon name="pulse"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
+    <ion-fab *ngIf="segment == 'details'" (click)="showVitalsPage()" vertical="bottom" horizontal="start" slot="fixed">
+        <ion-fab-button>
+            <ion-icon name="chatbubble-outline"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
+
+</ion-content>

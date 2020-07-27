@@ -1,0 +1,14 @@
+ion-card {
+    --background: radial-gradient(farthest-corner at 0% 0%, #ffffff 80%, #8d4d9a 20%);
+    border-color: #8d4d9a;
+    border-style: solid;
+    border-width: thin;
+    border-radius: 25px;
+    min-height: 213px;
+  }
+  
+  ion-fab-button {
+    --border-color: #ffffff;
+    --border-style: solid;
+    --border-width: thin;
+  }

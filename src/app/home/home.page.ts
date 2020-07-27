@@ -1,6 +1,7 @@
 import {Component, OnInit, OnDestroy, AfterViewInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { FirebaseX } from "@ionic-native/firebase-x/ngx";
+import { SessionService, FormContext, FORM_USER } from '../services/session.service';
 
 @Component({
   selector: "app-home",
@@ -9,15 +10,20 @@ import { FirebaseX } from "@ionic-native/firebase-x/ngx";
 })
 
 export class HomePage implements OnInit, OnDestroy, AfterViewInit {
+  form_user = FORM_USER;
   constructor(   
     private router: Router,
     private firebase: FirebaseX,
+    private session: SessionService
   ) {}
 
   ngOnInit() {
-    this.firebase.onMessageReceived().subscribe((data) => {
-      this.router.navigate(["/patient-details"]);
-    });
+    if(this.session.isHybrid()) {
+      this.firebase.onMessageReceived().subscribe((data) => {
+        this.router.navigate(["/patient-details"]);
+      });
+    }
+
   }
 
   ngAfterViewInit() {
@@ -26,6 +32,12 @@ export class HomePage implements OnInit, OnDestroy, AfterViewInit {
     //     App.exitApp();
     //   });
     // });
+  }
+
+  setContext(userType: FORM_USER) {
+    let formContext = {} as FormContext;
+    formContext.userType = userType;
+    this.session.setFormContext(formContext);
   }
 
   ngOnDestroy() {}

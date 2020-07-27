@@ -24,3 +24,21 @@
 @import "~@ionic/angular/css/text-alignment.css";
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
+
+//.vital-modal-css {--height: auto; .modal-wrapper{ width: 90vw; .ion-page { position: relative; contain: content; max-height: 90vh; .modal-content { overflow: auto; } } } }
+.vital-modal-css {--height: 65%;}
+.select-alert-css .alert-wrapper.sc-ion-alert-md,
+.select-alert-css .alert-wrapper.sc-ion-alert-ios,
+.select-alert-css .alert-checkbox-group.sc-ion-alert-md {
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    max-height: 100%;
+}
+
+.selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}

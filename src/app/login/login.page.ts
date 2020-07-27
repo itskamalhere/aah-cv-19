@@ -1,29 +1,39 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, TemplateRef, ViewChild } from '@angular/core';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';  
+import { trigger, state, style, transition, animate,keyframes } from '@angular/animations';
 import { FingerprintAIO } from '@ionic-native/fingerprint-aio/ngx';
-import { SessionService, AUTHENTICATION } from "../services/session.service";
+import { SessionService, AUTHENTICATION, EFFECT } from "../services/session.service";
 import { FirebaseService } from '../services/firebase.service';
-import { Device } from '@capacitor/core';
-import {Plugins, HapticsImpactStyle } from '@capacitor/core';
 import { User } from '../model/user-model';
 
-const { Haptics } = Plugins;
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
+  animations: [
+    trigger('shakeAnimation', [
+      state('reset', style({})),
+      state('set', style({})),
+      transition('reset => set', animate(250, keyframes([
+        style({ transform: 'translateX(-10%)' }),
+        style({ transform: 'translateX(10%)' }),
+        style({ transform: 'translateX(-10%)' }),
+        style({ transform: 'translateX(10%)' })
+      ])))
+    ])
+  ]
 })
 
 export class LoginPage implements OnInit, OnDestroy, AfterViewInit {
+  shakeAnimation: string = "reset";
   statusHeader: string = "";
   statusLabel: string = "";
   biometricSub: Subscription;
   userSub: Subscription;
   numbers: string[] = ["1","2","3","4","5","6","7","8","9"];
   zero: string = "0";
-  passCode: string;
-  deviceId: string;
+  passCode: string;  
   @ViewChild("statusTemplate") private statusTemplate: TemplateRef<object>;
   @ViewChild("passcodeTemplate") private passcodeTemplate: TemplateRef<object>;
   viewTemplate: TemplateRef<object>;
@@ -33,13 +43,10 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private biometric: FingerprintAIO,
     private session: SessionService,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService    
     ) { }
 
   ngOnInit() {
-    
-    this.getDeviceId();
-    Haptics.selectionStart();
 
     this.biometricSubject.subscribe((status) => {
       if (status == BIOMETRIC_VERIFICATION.PENDING) {
@@ -75,44 +82,43 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewInit {
 
   }
 
-  async getDeviceId(){
-    const info = await Device.getInfo();
-    this.deviceId = info.uuid;
-  }
-
   async doAuthentication() {
     const me = this;
-    try{        
-        this.biometric.isAvailable().then(function(result) {
-            me.biometric.show({
-                title: 'Biometric Authentication',
-                description: 'Continue with biometric authentication',
-                fallbackButtonTitle: 'Use Backup',
-                disableBackup:true
-            })
-            .then((result: any) => {
-                me.biometricSubject.next(BIOMETRIC_VERIFICATION.SUCCESS);
-            })
-            .catch((error: any) => {
-                me.statusLabel = error.message==undefined?error:error.message;
-                me.biometricSubject.next(BIOMETRIC_VERIFICATION.FAILED);
-            });
-        },function(error) {
-            me.statusLabel = error.message==undefined?error:error.message;
-            if(error && (Number(error.code) == me.biometric.BIOMETRIC_NOT_ENROLLED) || (Number(error.code) == me.biometric.BIOMETRIC_SCREEN_GUARD_UNSECURED)){                    
-                me.statusLabel = "Enable biometric authentication in this device to proceed";
-            }
-            me.biometricSubject.next(BIOMETRIC_VERIFICATION.FAILED);            
-        });
-    }catch(error) {
-        me.statusLabel = error.message==undefined?error:error.message;
-        me.biometricSubject.next(BIOMETRIC_VERIFICATION.FAILED);
+    if(this.session.isHybrid()) {
+      try{        
+          this.biometric.isAvailable().then(function(result) {
+              me.biometric.show({
+                  title: 'Biometric Authentication',
+                  description: 'Continue with biometric authentication',
+                  fallbackButtonTitle: 'Use Backup',
+                  disableBackup:true
+              })
+              .then((result: any) => {
+                  me.biometricSubject.next(BIOMETRIC_VERIFICATION.SUCCESS);
+              })
+              .catch((error: any) => {
+                  me.statusLabel = error.message==undefined?error:error.message;
+                  me.biometricSubject.next(BIOMETRIC_VERIFICATION.FAILED);
+              });
+          },function(error) {
+              me.statusLabel = error.message==undefined?error:error.message;
+              if(error && (Number(error.code) == me.biometric.BIOMETRIC_NOT_ENROLLED) || (Number(error.code) == me.biometric.BIOMETRIC_SCREEN_GUARD_UNSECURED)){                    
+                  me.statusLabel = "Enable biometric authentication in this device to proceed";
+              }
+              me.biometricSubject.next(BIOMETRIC_VERIFICATION.FAILED);            
+          });
+      }catch(error) {
+          me.statusLabel = error.message==undefined?error:error.message;
+          me.biometricSubject.next(BIOMETRIC_VERIFICATION.FAILED);
+      }
+    } else {
+      me.biometricSubject.next(BIOMETRIC_VERIFICATION.FAILED);      
     }
 }
 
 verifyUserDevice() {
   const me = this;
-  this.firebaseService.fetchUserbyNo(this.session.getMobileNumber()).then((users) => {
+  this.firebaseService.fetchUsersbyField("mobileNumber",this.session.getMobileNumber(),"==").then((users) => {
     if(users && users.length > 0) {
       let user = {} as User;
       user.id = [...users][0].id;
@@ -123,7 +129,13 @@ verifyUserDevice() {
       if(role){
         role.get().then((role) => {
           me.session.setPermissions(role.data().permissions);
-          me.userSubject.next(USER_VERIFICATION.SUCCESS);
+          if(this.session.isHybrid() && this.session.getDeviceId() == user.data.deviceId) {
+            me.userSubject.next(USER_VERIFICATION.SUCCESS);
+          } else if(!this.session.isHybrid()) {
+            me.userSubject.next(USER_VERIFICATION.SUCCESS);
+          } else {
+            me.userSubject.next(USER_VERIFICATION.FAILED);
+          }
         });
       } else {
         me.userSubject.next(USER_VERIFICATION.FAILED);
@@ -138,13 +150,8 @@ verifyUserDevice() {
   });
 }
 
-vibrate(hapticStyle: HapticsImpactStyle) {
-  Haptics.impact({style: hapticStyle});
-  Haptics.vibrate();    
-}
-
 add(value: string) {
-  Haptics.selectionChanged();
+  this.session.vibrate(EFFECT.KEY_PRESS);
   if(this.passCode.length < 4) {
     this.passCode = this.passCode + value;
   }
@@ -154,21 +161,28 @@ add(value: string) {
 }
 
 acceptCode() {
-  Haptics.selectionChanged();
+  this.session.vibrate(EFFECT.KEY_PRESS);
   let confirmCode = this.session.getPassCode();
   if(this.passCode == confirmCode) {
     this.userSubject.next(USER_VERIFICATION.PENDING);
     this.biometricSubject.next(BIOMETRIC_VERIFICATION.SUCCESS);
   }else {
-    console.log("no match");
     this.passCode = "";
-    //shake effect
-    this.vibrate(HapticsImpactStyle.Medium);
+    this.shakeAnimation = "set";
+    this.statusHeader = "Wrong Passcode";
+    this.session.vibrate(EFFECT.MEDIUM);
+  }
+}
+
+resetShake() {
+  if(this.shakeAnimation === "set") {
+    this.shakeAnimation = "reset";
+    this.statusHeader = "Enter Passcode";
   }
 }
 
 deleteCode() {
-  Haptics.selectionChanged();
+  this.session.vibrate(EFFECT.KEY_PRESS);
   if(this.passCode.length > 0) {
     this.passCode = this.passCode.substring(0,this.passCode.length-1);
   }
@@ -178,8 +192,7 @@ ngAfterViewInit() {
   this.biometricSubject.next(BIOMETRIC_VERIFICATION.PENDING);
 }
 
-ngOnDestroy() {
-  Haptics.selectionEnd();
+ngOnDestroy() {   
   this.unsubscribeAll();
 }
 

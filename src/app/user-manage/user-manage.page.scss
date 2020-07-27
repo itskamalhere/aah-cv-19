@@ -1,0 +1,14 @@
+ion-datetime {
+    touch-action: none;
+}
+
+ion-select::part(text) {
+    white-space: normal !important;   
+    display:block;
+    //text-align: right;
+}
+
+.required:after {
+    content:" *";
+    color: red;
+  }

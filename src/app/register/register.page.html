@@ -3,6 +3,7 @@
   <div id="container" [@slideInOut] *valueChange="statusHeader">   
     <ng-container *ngTemplateOutlet="viewTemplate"></ng-container>
   </div>
+  <div *ngIf="!session.isHybrid()" id="recaptcha-container"></div>
 </ion-content>
 
 <ng-template #statusTemplate>
@@ -22,7 +23,7 @@
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
     </ion-text>
-  </div>
+  </div>  
 </ng-template>
 
 <ng-template #otpTemplate>
@@ -33,7 +34,7 @@
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
     </ion-text>
-  </div>
+  </div>  
 </ng-template>
 
 <ng-template #passcodeTemplate>

@@ -1,4 +1,4 @@
-import { Directive, Input, TemplateRef, ViewContainerRef, OnInit } from '@angular/core';
+import { Directive, Component, Input, TemplateRef, ViewContainerRef, OnInit } from '@angular/core';
 import { SessionService } from '../services/session.service';
 
 @Directive({ selector: '[hasPermissions]' })

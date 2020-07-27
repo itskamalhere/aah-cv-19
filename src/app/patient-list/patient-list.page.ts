@@ -1,95 +1,120 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ModalController} from '@ionic/angular';
+import { FormContext, FORM_ACTION, SessionService, FORM_USER } from '../services/session.service';
+import { User } from '../model/user-model';
 import { FirebaseService } from '../services/firebase.service';
-import { FormGroup, Validators, FormBuilder } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { FormContext } from '../model/user-model';
-
-interface userData {
-  firstName: string;
-  lastName: string;
-  age: number;
-}
+import { UserManagePage } from '../user-manage/user-manage.page';
 
 @Component({
   selector: 'app-patient-list',
   templateUrl: './patient-list.page.html',
   styleUrls: ['./patient-list.page.scss'],
 })
-export class PatientListPage implements OnInit {  
+export class PatientListPage implements OnInit, OnDestroy {
   formContext: FormContext;
-  users$: Observable<any[]>;
-  userForm: FormGroup;
+  segment = "assigned";
+  searchTerm = "";
+  userList: User[];
+  users: User[];
+  userSub: Subscription;
+  loaded = false;
   constructor(
-    public router: Router,
-    private firebaseService: FirebaseService,
-    public fb: FormBuilder
+    public router: Router,    
+    private modalController: ModalController,
+    private session: SessionService,
+    private firebaseService: FirebaseService
     ) {
-      //this.users = firestore.collection("users").valueChanges({idField: 'userId'});       
-      //this.vitals = firestore.collection('users/rJxyRbbsDKBXLta0UXbl/vitals').valueChanges();
-      //this.vitals = firestore.collection("users", ref => 
-      //ref.where("firstName", "==", "John")).doc().collection("vitals").valueChanges();
+      this.formContext = this.session.getFormContext();
     }
+
   ngOnInit() {
-    this.formContext = {} as FormContext;
-    this.formContext.userType = "staff";
-    this.formContext.action = "create";
-    this.users$ = this.firebaseService.fetchUsers();    
-
-    this.userForm = this.fb.group({
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
-      //age: ['', [Validators.required]]
-      age: ['10']
-    });
-
+    this.loadData();
   }
 
-  CreateRecord() {
-    this.firebaseService.createUser(this.userForm.value)
-      .then(resp => {
-        //Reset form
-        this.userForm.reset();
-      })
-      .catch(error => {
-        console.log(error);
-      });
+  segmentChanged(event: any) {
+    this.loaded = false;
+    this.segment = event.target.value.toLowerCase();    
+    this.loadData();
   }
 
-  RemoveRecord(rowID) {
-    this.firebaseService.deleteUser(rowID);
-  }
-
-  EditRecord(record) {
-    record.isEdit = true;
-    record.EditFirstName = record.firstName;
-    record.EditLastName = record.lastName;
-    record.EditAge = record.age;
-  }
-
-  UpdateRecord(recordRow) {
-    let record = {};
-    record['firstName'] = recordRow.EditFirstName;
-    record['lastName'] = recordRow.EditLastName;
-    record['age'] = recordRow.EditAge;
-    this.firebaseService.updateUser(recordRow.id, record);
-    recordRow.isEdit = false;
-  }
-
-  manageUser(action: string) {
-    this.router.navigate(['user-manage'], {
-      queryParams: {
-        userType: this.formContext.userType,
-        action: action
-       }
+  loadData() {
+    this.users = [];
+    let userType = this.formContext.userType;
+    let assignedTo = this.segment=="assigned"&&userType==FORM_USER.PATIENT?this.session.getUser().id:undefined;    
+    if(this.userSub) {
+      this.userSub.unsubscribe();
+    }
+    this.userSub = this.firebaseService.fetchUsers(userType.toString(),assignedTo).subscribe(users => {
+      this.userList = users;
+      if(this.searchTerm.length == 0) {
+        this.users = users;
+      } else {
+        this.filterData(this.searchTerm);
+      }
+      this.loaded = true;      
     });
   }
 
-
-  getDetailsPage(user) {
-    console.log("Get Patient Details Page");
-    this.router.navigate(['patient-details'], {
-      queryParams: { value: 'test' }
+  filterData(event: any, term?: string) {
+    if(event && event.target && event.target.value) {
+      this.searchTerm = event.target.value.toLowerCase();
+    }
+    if(term) {
+      console.log("inside");
+      this.searchTerm = term;
+    }
+    console.log(this.searchTerm);
+    this.users = this.userList.filter(user => {
+      let nameMatch: boolean = false;
+      let uhidMatch: boolean = false;
+      let mobileNumberMatch: boolean = false;
+      if(user && user.data && user.data.firstName && user.data.lastName) {
+        const name = user.data.firstName + " " + user.data.lastName;
+        nameMatch = name.toLowerCase().indexOf(this.searchTerm) > -1;
+      }
+      if(user && user.data && user.data.uhid) {
+        uhidMatch = user.data.uhid.toLowerCase().indexOf(this.searchTerm) > -1;
+      }
+      if(user && user.data && user.data.mobileNumber) {
+        mobileNumberMatch = user.data.mobileNumber.toLowerCase().indexOf(this.searchTerm) > -1;
+      }
+      return nameMatch || uhidMatch || mobileNumberMatch;
     });
   }
+
+  ngOnDestroy() {
+    if(this.userSub) {
+      this.userSub.unsubscribe();
+    }    
+  }
+
+  async addUser() {
+    let formContext = this.formContext;
+    formContext.action = FORM_ACTION.ADD;
+    this.session.setFormContext(formContext);
+    const modal = await this.modalController.create({
+      component: UserManagePage
+    });
+    return await modal.present();
+  }
+
+  async EditUser(id: string) {
+    let formContext = this.formContext;    
+    formContext.action = FORM_ACTION.EDIT;
+    this.session.setFormContext(formContext);
+    const modal = await this.modalController.create({
+      component: UserManagePage
+    });
+    return await modal.present();
+  }
+
+  showDetails(id: string) {
+    let formContext = this.formContext;
+    formContext.userId = id;
+    this.session.setFormContext(formContext);
+    this.router.navigate(['patient-details']);
+  }
+
 }
