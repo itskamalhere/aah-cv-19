@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { firestore } from 'firebase';
 import { User, UserData, Vital } from "../model/user-model";
 import { Subscription } from 'rxjs';
-//import * as firebase from 'firebase';
+import * as firebase from 'firebase';
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +27,7 @@ export class FirebaseService {
 
   fetchUsersbyField(fieldName: string, fieldValue: string, operator: any) {   
     let query: AngularFirestoreCollection<any>;
-    if(fieldName.trim() == "id") {
+    if(fieldName.trim() == "id") {      
       query = this.firestore.collection(this.userCollectionName, ref => ref.where(firestore.FieldPath.documentId(), operator, fieldValue));
     } else {
       query = this.firestore.collection(this.userCollectionName, ref => ref.where(fieldName.trim(), operator, fieldValue.trim()));
@@ -85,9 +85,28 @@ export class FirebaseService {
   fetchUserbyId$(id: string) {
     let query = this.firestore.doc(this.userCollectionName+"/" + id);
     return query.snapshotChanges().pipe(
-      map(a => a.payload.data() as UserData)
+      map(a => {
+        const id = a.payload.id;
+        const ref = a.payload.ref as DocumentReference;
+        const data: UserData = a.payload.data() as UserData;
+        return {id,ref,data};
+      })
     );
   }
+
+  // fetchUserbyId$(id: string) {
+  //   let query = this.firestore.doc(this.userCollectionName+"/" + id);
+  //   return query.snapshotChanges().pipe(
+  //     map(snapshot => {
+  //       return snapshot.(a => {
+  //         const id = a.payload.doc.id;
+  //         const ref = a.payload.doc.ref as DocumentReference;
+  //         const data: UserData = a.payload.doc.data() as UserData;
+  //         return {id,ref,data};
+  //       });
+  //     })
+  //   );
+  // }
 
   lookup(fnParams: any) {
     let query: AngularFirestoreCollection<any>;
@@ -132,11 +151,13 @@ export class FirebaseService {
   }
 
   fetchUsers(userType: string, assignedTo: string) {        
-    let query = this.firestore.collection(this.userCollectionName, ref => ref.where("userType", "==", userType));
+    let query = this.firestore.collection(this.userCollectionName, ref => ref.where("userType", "==", userType).
+    orderBy("modifyDate","desc"));
     if(assignedTo) {      
       query = this.firestore.collection(this.userCollectionName, ref => ref.where("userType", "==", userType)
       .where("assignedTo","array-contains",assignedTo)
-      .where("status","==","Active"));
+      .where("status","==","Active").
+      orderBy("modifyDate","desc"));
     }
     return query.snapshotChanges().pipe(
       map(snapshot => {
@@ -171,6 +192,9 @@ export class FirebaseService {
 
   addUser(record: UserData) {
     record.role = this.firestore.doc(this.roleCollectionName+"/"+record.role).ref;
+    const timeStamp = new Date();
+    record.creationDate = timeStamp;
+    record.modifyDate = timeStamp;
     return this.userDb.add(record);
   }
 
@@ -178,6 +202,7 @@ export class FirebaseService {
     if(record.role) {
       record.role = this.firestore.doc(this.roleCollectionName+"/"+record.role).ref;
     }
+    record.modifyDate = new Date();
     return this.firestore.doc(this.userCollectionName + '/' + recordId).update(record);
   }
 
@@ -186,10 +211,8 @@ export class FirebaseService {
   }
 
   addVital(recordId: string, vital: Vital) {
-    let doc = this.firestore.doc(this.userCollectionName + '/' + recordId);
-    return doc.update({
-      vitals: firestore.FieldValue.arrayUnion(vital)
-    });
+    let doc = this.firestore.doc(this.userCollectionName + '/' + recordId);    
+    return doc.update({vitals: firestore.FieldValue.arrayUnion(vital),modifyDate:new Date()});
   }
 
 }

@@ -1,5 +1,9 @@
+<ion-header>
+  <ion-toolbar class="ion-text-center ion-align-self-end">
+    <img src="/assets/images/aah_1024x500.png" class="image-css"><img>
+  </ion-toolbar>
+</ion-header>
 <ion-content [fullscreen]="true">
-  <img src="/assets/images/logo.png"><img>
   <div id="container" [@slideInOut] *valueChange="statusHeader">   
     <ng-container *ngTemplateOutlet="viewTemplate"></ng-container>
   </div>
@@ -7,34 +11,35 @@
 </ion-content>
 
 <ng-template #statusTemplate>
-  <div>
-    <ion-text><strong>{{ statusHeader }}</strong></ion-text>    
-    <ion-text style="padding-top:0; white-space: pre-wrap;">
-      <p>{{ statusLabel }}</p>
-    </ion-text>
-  </div>
+  <p><ion-text><strong>{{ statusHeader }}</strong></ion-text></p>
+  <ion-text style="padding-top:0; white-space: pre-wrap;">
+    <p>{{ statusLabel }}</p>
+  </ion-text>
 </ng-template>
 
 <ng-template #registerTemplate>
-  <div>
-    <ion-text><strong>{{ statusHeader }}</strong></ion-text>
-    <ion-input placeholder="10 digit mobile number" type="tel" [(ngModel)]="mobileNumber"></ion-input>
-    <ion-button shape="round" (click) = "verifyMobileNoinDB()" >Register</ion-button>
+  <form *ngIf="mobileForm" [formGroup]="mobileForm">
+    <p><ion-text><strong>{{ statusHeader }}</strong></ion-text></p>
+    <p><ion-input placeholder="Enter 10 digit mobile number" autofocus="true"
+    type="tel" #mobileNumber formControlName="mobileNumber"></ion-input></p>
+    <control-messages [control]="mobileForm.get('mobileNumber')"></control-messages>
+    <p><ion-button shape="round" (click) = "verifyMobileNoinDB(mobileNumber.value.toString())" [disabled]="mobileForm.invalid">Register</ion-button></p>
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
-    </ion-text>
-  </div>  
+    </ion-text>    
+  </form>    
 </ng-template>
 
 <ng-template #otpTemplate>
-  <div>
-    <ion-text><strong>{{ statusHeader }}</strong></ion-text>
-    <ion-input placeholder="Enter OTP" type="tel" #otp></ion-input>
-    <ion-button (click) = "signInWithOTP(otp.value.toString())" >Submit</ion-button>
+  <form *ngIf="otpForm" [formGroup]="otpForm">
+    <p><ion-text><strong>{{ statusHeader }}</strong></ion-text></p>
+    <p><ion-input placeholder="Enter OTP" type="tel" autofocus="true" formControlName="otp" #otp></ion-input></p>
+    <control-messages [control]="otpForm.get('otp')"></control-messages>
+    <p><ion-button shape="round" (click) = "signInWithOTP(otp.value.toString())" [disabled]="otpForm.invalid">Submit</ion-button></p>
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
     </ion-text>
-  </div>  
+  </form>
 </ng-template>
 
 <ng-template #passcodeTemplate>
@@ -79,30 +84,33 @@
       </ion-row>
       <ion-row>
         <ion-col size="4" *ngFor="let num of numbers">
-          <ion-button (click)="add(num)" size="large" color="medium" fill="outline" shape="round">
+          <ion-button (click)="add(num)" size="large" color="light" fill="solid" shape="round">
             {{num}}
           </ion-button>
         </ion-col>
       </ion-row>
       <ion-row>
+        <ion-col size="4" class="ion-text-center ion-align-self-end">
+          <ion-button (click)="deleteCode()" color="light" fill="solid" shape="round">
+            <<
+          </ion-button>
+        </ion-col>        
         <ion-col>
-          <ion-button (click)="add(zero)" size="large" color="medium" fill="outline" shape="round">
+          <ion-button (click)="add(zero)" size="large" color="light" fill="solid" shape="round">
             {{zero}}
           </ion-button>
         </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="6">
-          <ion-button (click)="deleteCode()" color="medium" fill="outline" shape="round">
-            <<
-          </ion-button>
-        </ion-col>
-        <ion-col size="6">
-          <ion-button (click)="acceptCode()" color="medium" fill="outline" shape="round">
+        <ion-col size="4" class="ion-text-center ion-align-self-end">
+          <ion-button (click)="acceptCode()" color="light" fill="solid" shape="round">
             <ion-icon name="{{statusLabel}}" slot="icon-only"></ion-icon>
           </ion-button>
-        </ion-col>
+        </ion-col>        
       </ion-row>
     </ion-grid>
   </div>
+</ng-template>
+
+<ng-template #registerCompleteTemplate>
+  <p><ion-text><strong>{{ statusHeader }}</strong></ion-text></p>
+  <p><ion-button shape="round" (click) = "login()">Login</ion-button></p> 
 </ng-template>

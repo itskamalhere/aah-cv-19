@@ -51,12 +51,13 @@ const routes: Routes = [
             loadChildren: () => import('../patient-list/patient-list.module').then(m => m.PatientListPageModule)
           }
         ]
-      },
-      {
-        path: '',
-        redirectTo: '/home',
-        pathMatch: 'full'
       }
+      // ,
+      // {
+      //   path: '',
+      //   redirectTo: '/home',
+      //   pathMatch: 'full'
+      // }
     ]    
   }  
 ];

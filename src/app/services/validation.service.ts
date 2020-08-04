@@ -17,11 +17,13 @@ export class ValidationService {
       required: 'Required',
       invalidText: 'Enter valid text',
       invalidPattern: `Enter valid ${validatorValue}`,
-      invalidlength: `${validatorValue.label} should be of length ${validatorValue.value}`,
-      invalidMinlength: `${validatorValue.label} should be of minimum length ${validatorValue.value}`,
-      invalidMaxlength: `Maximum allowed length for ${validatorValue.label} is ${validatorValue.value}`,
+      invalidlength: `${validatorValue.label} length is ${validatorValue.value}`,
+      invalidMinlength: `${validatorValue.label} min length is ${validatorValue.value}`,
+      invalidMaxlength: `${validatorValue.label} max length is ${validatorValue.value}`,
       invalidUniqueField: `This ${validatorValue} already exists`,
-      invalidEmailAddress: 'Enter valid email address'
+      invalidEmailAddress: 'Enter valid email address',
+      min: 'Enter valid value',
+      max: 'Enter valid value'      
     };
     return config[validatorName];
   }

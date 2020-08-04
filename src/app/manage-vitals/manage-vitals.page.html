@@ -1,66 +1,89 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="end">      
       <ion-button fill="clear" (click)="close()">
         <ion-icon slot="icon-only" name="close"></ion-icon>
       </ion-button>
-    </ion-buttons>
-    <ion-title>{{ formContext.modalAction }} {{ formContext.modalName }}</ion-title>
+    </ion-buttons>    
   </ion-toolbar>
 </ion-header>
 
-<ion-content [forceOverscroll]="true">
-
+<ion-content>
   <form [formGroup]="vitalForm">
 
-    <ion-item *ngFor ="let attribute of formModel" class="ion-text-wrap">
-       
-        <ion-label color="primary" [ngClass]="attribute.attrRequired?'required':''" *ngIf="attribute.attrType=='select'||attribute.attrType=='date'||attribute.attrType=='lookup'">
-          {{attribute.attrLabel}}
-        </ion-label>
+    <ion-card class="ion-card-active">
+      <ion-card-header>
+        <ion-item color="primary-contrast">
+          <ion-icon color="primary" slot="start" size="large" name="pulse"></ion-icon>
+          <ion-label color="primary">
+            <h1>Vital Entry</h1>
+          </ion-label>
+      </ion-item>
+      </ion-card-header>
 
-        <ion-select *ngIf="attribute.attrType == 'select'" placeholder="Select One" 
-        interface="action-sheet" formControlName="{{attribute.attrName}}">
-          <ion-select-option *ngFor="let option of attribute.attrOptions" value="{{option}}">
-            {{option}}
-          </ion-select-option>
-        </ion-select>
+      <ion-card-content>
+        <ion-item *ngFor ="let attribute of formModel" 
+        [ngClass]="attribute.attrType=='textarea'?'item-area-css':'item-css'">
 
-        <ion-datetime *ngIf="attribute.attrType == 'date'" placeholder="Choose Date" min="{{attribute.attrMin}}" max="{{attribute.attrMax}}"
-        displayFormat="DD MMM, YYYY"
-        monthShortNames="Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec" formControlName="{{attribute.attrName}}">
-        </ion-datetime>
+            <ion-icon *ngIf="attribute.attrIcon" [name]="attribute.attrIcon" color="primary" slot="start"></ion-icon>
+            <ion-label color="primary" [ngClass]="attribute.attrRequired?'required':''" *ngIf="attribute.attrType=='select'||attribute.attrType=='date'||attribute.attrType=='lookup'">
+              {{attribute.attrLabel}}
+            </ion-label>
 
-        <ion-label color="primary" [ngClass]="attribute.attrRequired?'required':''" *ngIf="attribute.attrType=='text'||attribute.attrType=='tel'" position="floating">
-          {{attribute.attrLabel}}
-        </ion-label>
-        <ion-input *ngIf="attribute.attrType=='text'||attribute.attrType=='tel'"         
-        inputmode="{{attribute.attrType}}" autocomplete="off" formControlName="{{attribute.attrName}}">
-        </ion-input>
+            <ion-select *ngIf="attribute.attrType == 'select'" placeholder="Select One"
+            id="{{attribute.attrName}}" 
+            interface="action-sheet" formControlName="{{attribute.attrName}}">
+              <ion-select-option *ngFor="let option of attribute.attrOptions" value="{{option}}">
+                {{option}}
+              </ion-select-option>
+            </ion-select>
 
-        <ion-select *ngIf="attribute.attrType == 'lookup'"
-          [multiple]="attribute.attrSelection == 'single'?'false':'true'"
-          placeholder="Choose" [interfaceOptions]="selectAlertOptions"
-          [interface]="attribute.attrSelection == 'single'?'action-sheet':'alert'"
-          formControlName="{{attribute.attrName}}">
-         <ion-select-option *ngFor="let option of attribute.attrOptions | async" [value]="option.value">
-           {{option.label}}
-          </ion-select-option>
-        </ion-select>
+            <ion-datetime *ngIf="attribute.attrType == 'date'" placeholder="Choose Date" min="{{attribute.attrMin}}" max="{{attribute.attrMax}}"
+            id="{{attribute.attrName}}"
+            displayFormat="DD MMM, YYYY"
+            monthShortNames="Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec" formControlName="{{attribute.attrName}}">
+            </ion-datetime>
 
-        <control-messages [control]="vitalForm.get(attribute.attrName)"></control-messages>
+            <ion-label color="primary" [ngClass]="attribute.attrRequired?'required':''" *ngIf="attribute.attrType=='text'||attribute.attrType=='decimal'||attribute.attrType=='tel'" position="floating">
+              {{attribute.attrLabel}}
+            </ion-label>
 
-    </ion-item>
+            <ion-input *ngIf="attribute.attrType=='text'||attribute.attrType=='decimal'||attribute.attrType=='tel'"
+            id="{{attribute.attrName}}"
+            inputmode="{{attribute.attrType}}" autocomplete="off" formControlName="{{attribute.attrName}}">
+            </ion-input>
 
-    <div *ngIf="formContext.modalAction == 'Add'">
-      <ion-button size="medium" expand="full" (click)="addVital()" [disabled]="vitalForm.invalid">
-        Save
-      </ion-button>
-    </div>
-    <div *ngIf="formContext.modalAction == 'Edit'">
-      <ion-button size="medium" expand="full" (click)="updateVital()" [disabled]="vitalForm.invalid">
-        Update
-      </ion-button>
-    </div>  
+            <ion-select *ngIf="attribute.attrType == 'lookup'"
+              id="{{attribute.attrName}}"
+              [multiple]="attribute.attrSelection == 'single'?'false':'true'"
+              placeholder="Choose" [interfaceOptions]="selectAlertOptions"
+              [interface]="attribute.attrSelection == 'single'?'action-sheet':'alert'"
+              formControlName="{{attribute.attrName}}">
+              <ion-select-option *ngFor="let option of attribute.attrOptions | async" [value]="option.value">
+              {{option.label}}
+              </ion-select-option>
+            </ion-select>
+
+            <ion-textarea *ngIf="attribute.attrType == 'textarea'"
+            id="{{attribute.attrName}}"
+            formControlName="{{attribute.attrName}}"
+            rows="3" cols="20" [placeholder]="'Enter any '+attribute.attrLabel.toLowerCase()+' here...'">
+            </ion-textarea>
+
+            <control-messages [control]="vitalForm.get(attribute.attrName)"></control-messages>
+
+        </ion-item>
+      </ion-card-content>
+  </ion-card>
+  <div *ngIf="formContext.modalAction == 'Add'">
+    <ion-button size="medium" expand="block" shape="round" (click)="addVital()" [disabled]="vitalForm.invalid || isFormInvalid()">
+      Add Vital
+    </ion-button>
+  </div>
+  <div *ngIf="formContext.modalAction == 'Edit'">
+    <ion-button size="medium" expand="block" shape="round" (click)="updateVital()" [disabled]="vitalForm.invalid">
+      Update Vital
+    </ion-button>
+  </div>   
   </form>
 </ion-content>

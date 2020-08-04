@@ -1,12 +1,12 @@
 {
-  "appId": "com.aah.cv19",
-  "appName": "AAH CV19",
+  "appId": "com.aah.app",
+  "appName": "Annai Arul Hospital",
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "www",
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 0
+      "androidScaleType": "CENTER_CROP"
     }
   },
   "cordova": {}

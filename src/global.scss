@@ -25,11 +25,17 @@
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
 
-//.vital-modal-css {--height: auto; .modal-wrapper{ width: 90vw; .ion-page { position: relative; contain: content; max-height: 90vh; .modal-content { overflow: auto; } } } }
-.vital-modal-css {--height: 65%;}
+@font-face{
+    font-family: 'OpenSans';
+    font-style: normal;
+    font-weight: 300;
+    src: url('./assets/OpenSans-Regular.ttf');    
+}
 .select-alert-css .alert-wrapper.sc-ion-alert-md,
 .select-alert-css .alert-wrapper.sc-ion-alert-ios,
-.select-alert-css .alert-checkbox-group.sc-ion-alert-md {
+.select-alert-css .alert-checkbox-group.sc-ion-alert-md,
+.select-alert-css .alert-checkbox-group.sc-ion-alert-ios
+ {
     min-width: 100%;
     max-width: 100%;
     min-height: 100%;

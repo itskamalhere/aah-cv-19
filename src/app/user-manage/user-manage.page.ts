@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, NgZone } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormModel, UserData } from '../model/user-model';
 import { FormGroup, FormBuilder, AbstractControl } from '@angular/forms';
 import { FirebaseService } from '../services/firebase.service';
@@ -7,6 +7,8 @@ import { AngularFireFunctions } from '@angular/fire/functions';
 import { ToastController, ModalController } from '@ionic/angular';
 import { first } from 'rxjs/operators';
 import { LoadingController } from '@ionic/angular';
+import { ValidationService } from '../services/validation.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-user-manage',
@@ -14,7 +16,7 @@ import { LoadingController } from '@ionic/angular';
   styleUrls: ['./user-manage.page.scss'],
 })
 
-export class UserManagePage implements OnInit, AfterViewInit {
+export class UserManagePage implements OnInit {
   formContext: FormContext;
   userForm: FormGroup;
   formModel: any;
@@ -23,40 +25,38 @@ export class UserManagePage implements OnInit, AfterViewInit {
   staffRoles = [];
   selectAlertOptions: any = {
     cssClass: "select-alert-css"
-  };
+  };  
+  valuesSub: Subscription
 
   constructor(
     private formBuilder: FormBuilder,
     private loadingController: LoadingController,
     private modalController: ModalController,
     private toastController: ToastController,
-    private firebaseService: FirebaseService,
-    private model: FormModel,
+    private firebaseService: FirebaseService,    
+    private validationService: ValidationService,
     private session: SessionService,
     private functions: AngularFireFunctions
     ) {
       this.formContext = this.session.getFormContext();
+      if(this.formContext.userType == FORM_USER.PATIENT) {
+        this.formModel = new FormModel().PatientModel;
+      } else {
+        this.formModel = new FormModel().StaffModel;
+      }
    }
 
-  ngOnInit() {
+  ngOnInit() {    
     this.initForm();
-  }
-
-  ngAfterViewInit() {    
-    if(this.formContext.action == FORM_ACTION.EDIT) {
-      this.setValuesForEdit();
-    }
   }
 
   close() {
     this.modalController.dismiss();
   }
 
-  initForm() {
-    if(this.formContext.userType == FORM_USER.PATIENT) {
-      this.formModel = this.model.PatientModel;
-    } else {
-      this.formModel = this.model.StaffModel;
+  async initForm() {
+    if(this.formContext.action == FORM_ACTION.EDIT) {
+      await this.presentLoading("Loading...");
     }
     let formControl = {};
     for (let entry of this.formModel) {
@@ -68,7 +68,7 @@ export class UserManagePage implements OnInit, AfterViewInit {
   }
 
   setValuesForEdit() {
-    this.firebaseService.fetchUserbyId(this.formContext.userId).then((user) => {
+    this.firebaseService.fetchUserbyId(this.formContext.user.id).then((user) => {
       if(user) {
         Object.keys(this.userForm.controls).forEach((fieldName) =>{
           let fieldValue = user.data[fieldName];
@@ -85,6 +85,7 @@ export class UserManagePage implements OnInit, AfterViewInit {
           }
         });
         this.userForm.markAllAsTouched();
+        this.loadingController.dismiss();
       }
     }, (err) => {
       return null;
@@ -95,7 +96,18 @@ export class UserManagePage implements OnInit, AfterViewInit {
     let index = this.formModel.findIndex(field => field.attrName === fieldName);
     const options = this.formModel[index].attrOptions;
     if(!options) {
+      if(this.valuesSub) {
+        this.valuesSub.unsubscribe();        
+      }
       this.formModel[index].attrOptions = this.firebaseService.lookup(fnParams);
+      this.valuesSub = this.formModel[index].attrOptions.subscribe(values => {
+        if(this.valuesSub) {
+          this.valuesSub.unsubscribe();
+        }
+        if(this.formContext.action == FORM_ACTION.EDIT) {
+          this.setValuesForEdit();
+        }
+      });
     }
   }
 
@@ -106,19 +118,19 @@ export class UserManagePage implements OnInit, AfterViewInit {
       let value = form[key];
       if(forUpdate) {
         if(this.userForm.get(key).dirty) {
-          if(typeof value == "string") {
-            record[key] = value.trim();
+          if(typeof value == "string") {            
+            record[key] = key=="bloodType"?value.toUpperCase().trim():value.trim();            
           } else {
             record[key] = value;
           }
         }
       } else {
         if(typeof value == "string") {
-          record[key] = value.trim();
+          record[key] = key=="bloodType"?value.toUpperCase().trim():value.trim();
         } else {
           record[key] = value;
         }
-      }      
+      }
     });
     return record;
   }
@@ -129,13 +141,13 @@ export class UserManagePage implements OnInit, AfterViewInit {
         var uhid = this.userForm.get("uhid").value;
         var firstName = this.userForm.get("firstName").value;
         var lastName = this.userForm.get("lastName").value;
-        var fullName = firstName+" "+lastName;      
+        var fullName = firstName+" "+lastName;
         this.functions.httpsCallable("subscribeUsers")(
           {tokens:tokens,id:id,uhid:uhid,fullName:fullName}).pipe(first())
         .subscribe(resp => {
           console.log({ resp });
           this.dismissLoading(close);
-        }, err => {        
+        }, err => {
           console.error({ err });
           this.dismissLoading(close);
         });
@@ -173,7 +185,7 @@ export class UserManagePage implements OnInit, AfterViewInit {
   }
 
   async addUser(saveAction: string) {
-    await this.presentLoading();
+    await this.presentLoading("Saving...");
     let record = this.cleanForm(false);
     this.firebaseService.addUser(record).then(res => {
       this.subscribeUsers(record,res.id,(saveAction.length<=0));
@@ -185,28 +197,28 @@ export class UserManagePage implements OnInit, AfterViewInit {
   }
 
   async updateUser() {
-    await this.presentLoading();
+    await this.presentLoading("Saving...");
     let record = this.cleanForm(true);
-    this.firebaseService.updateUser(this.formContext.userId, record).then(resp => {
+    this.firebaseService.updateUser(this.formContext.user.id, record).then(resp => {      
       if(record.assignedTo) {
-        this.subscribeUsers(record,this.formContext.userId,true);
+        this.subscribeUsers(record,this.formContext.user.id,true);
       } else {
         this.dismissLoading(true);
       }
     }).catch(error => {
       console.log(error);
-      this.loadingController.dismiss();     
+      this.loadingController.dismiss();
       alert(error);
     })
   }
 
   reset() {
     this.userForm.reset(this.initValues);
-  } 
+  }
 
-  async presentLoading() {
+  async presentLoading(message: string) {
     let loading = await this.loadingController.create({
-      message: 'Saving...'
+      message: message
     });
     await loading.present();
   }
@@ -227,5 +239,4 @@ export class UserManagePage implements OnInit, AfterViewInit {
     });
     await toast.present();
   }
-
 }

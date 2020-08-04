@@ -26,6 +26,23 @@
     --ion-background-color: radial-gradient(farthest-corner at 0% 0%, #ffffff 75%, #8d4d9a 25%);
     --color: #000000;
   }
+
+  ion-input {
+    --background: lightgrey;
+    border-radius: 25px;
+    width: 70%;
+    margin: auto;    
+  }
+
+  p {
+    margin-bottom: 10px!important;
+  }
+
+  .image-css {
+    margin-top: 10px;
+    max-width: 300px;
+    max-height: 80px;
+  }
   
   .icon-ctrl {
     font-size: 80px;

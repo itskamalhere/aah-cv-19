@@ -1,15 +1,19 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
-import { ChartDataSets, Chart, TimeScale, TimeDisplayFormat } from 'chart.js';
-import { Color, Label } from 'ng2-charts';
-import { DatePipe } from '@angular/common';
-import { ModalController } from '@ionic/angular';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { TimeScale } from 'chart.js';
+import { ModalController, Platform } from '@ionic/angular';
 import { ManageVitalsPage } from '../manage-vitals/manage-vitals.page';
 import { ChartConfig, VitalsConfig, DAY_TIMESCALE, WEEK_TIMESCALE, MONTH_TIMESCALE, YEAR_TIMESCALE } from './chart-interface';
 import * as moment from 'moment';
-import { FormContext, SessionService, MODAL_ACTION, FORM_MODAL } from '../services/session.service';
+import { FormContext, SessionService, MODAL_ACTION, FORM_MODAL, FORM_ACTION } from '../services/session.service';
 import { Subscription } from 'rxjs';
-import { UserData, Vital } from '../model/user-model';
+import { Vital, User, UserData } from '../model/user-model';
 import { FirebaseService } from '../services/firebase.service';
+import { UserManagePage } from '../user-manage/user-manage.page';
+import * as Chart from 'chart.js';
+import { AppPreferences } from '@ionic-native/app-preferences/ngx';
+import { FirebaseX } from '@ionic-native/firebase-x/ngx';
+import { Plugins } from '@capacitor/core';
+const { App } = Plugins;
 
 
 @Component({
@@ -20,11 +24,11 @@ import { FirebaseService } from '../services/firebase.service';
 
 export class PatientDetailsPage implements OnInit, OnDestroy {
   formContext: FormContext;
-  user: UserData;
+  user: User;
+  userData: UserData;
   userSub: Subscription;
   segment = "details";
-  displayBy = "day";
-  userDetails: UserData;
+  displayBy = "day";  
   vitalsStartDate: string;
   vitalsEndDate: string;
   selectedDate: string;
@@ -37,20 +41,45 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   vitalsChartConfigs: ChartConfig[];
   fromDateVal: string;
   toDateVal: string;
+  initialized: boolean = false;
   loaded: boolean = false;
+  subscribed: boolean = false;
 
   constructor(
-    private session: SessionService,
+    public session: SessionService,
     private firebaseService: FirebaseService,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private appPreferences: AppPreferences,
+    private firebase: FirebaseX,
+    public platform: Platform
     ) {
     this.formContext = this.session.getFormContext();
-    this.user = {} as UserData;
-    this.userDetails = {} as UserData;
-    this.userSub = this.firebaseService.fetchUserbyId$(this.formContext.userId).subscribe(user => {
+    let sessionUser = this.session.getUser();
+    if(sessionUser && sessionUser.data && sessionUser.data.userType == "Patient") {
+      this.formContext.user = sessionUser;
+      this.session.setFormContext(this.formContext);
+      if(this.session.isHybrid() && !this.subscribed) {
+        let topics = [];
+        let role = sessionUser.data.role.path.toString();
+        role = role.substring(role.lastIndexOf("/")+1);
+        let userType = sessionUser.data.userType;
+        topics.push(role);
+        topics.push(userType);
+        this.subscribeTopics(topics);
+      }      
+    }
+    Chart.defaults.global.defaultFontFamily = 'OpenSans';
+    Chart.defaults.global.defaultFontColor = 'black';
+    this.user = {} as User;
+    this.userData = {} as UserData;
+    this.userSub = this.firebaseService.fetchUserbyId$(this.formContext.user.id).subscribe(user => {
+      let formContext = this.formContext;
+      formContext.user = user;
+      this.session.setFormContext(formContext);
       this.user = user;
-      this.userDetails = user;
-      if(!this.loaded && this.userDetails && this.userDetails.vitals) {
+      this.userData = user.data;
+      this.loaded = true;
+      if(!this.initialized && this.userData && this.userData.vitals) {
         this.sortVitalsInDescOrder();
         this.initializeVitalsDateRange();
         this.selectedDate = moment(this.vitalsEndDate).format("YYYY-MM-DD").toString();
@@ -60,16 +89,67 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
         this.yearDate = moment(this.vitalsEndDate).startOf('year').toString();
         this.setDateRangeControls();
         this.setChartData(true);
-        this.loaded = true;
+        this.initialized = true;
       } else {
         this.sortVitalsInDescOrder();
         this.setChartData(false);
-      }      
+      }
     });
   }
 
   ngOnInit() {
-    //this.userDetails = new TestData().prepareData();
+    let sessionUser = this.session.getUser();
+    if(sessionUser && sessionUser.data && sessionUser.data.userType == "Patient") {
+      this.platform.backButton.subscribeWithPriority(-1, () => {
+        App.exitApp();
+      });
+    }
+  }
+
+  async subscribeTopics(newTopics: string[]) {
+    console.log("newTopics");
+    console.log(newTopics);
+    const me = this;
+    this.appPreferences.fetch("topics","topics").then(async (oldTopics) => {
+      console.log("oldTopics");
+      console.log(oldTopics);
+      await this.unSubscribeTopics(oldTopics);
+      for(const topic of newTopics) {
+        await me.firebase.subscribe(topic);
+        console.log("subscribed: "+topic);
+      }
+      await me.writeTopics(newTopics);
+      this.subscribed = true;
+    },function(err) {
+      console.log("Error: "+err);
+    });
+  }
+
+  async unSubscribeTopics(oldTopics: string[]) {
+    if(oldTopics) {
+      for(const topic of oldTopics) {
+        await this.firebase.unsubscribe(topic);
+        console.log("unsubscribed: "+topic);
+      }
+    }
+  }
+
+  async writeTopics(topics: string[]) {
+    this.appPreferences.store("topics","topics",topics).then((res) => {
+      console.log("topics written");
+    },function(err) {
+      console.log("error: " + err);
+    });
+  }
+
+  async EditUser() {
+    let formContext = this.formContext;
+    formContext.action = FORM_ACTION.EDIT;
+    this.session.setFormContext(formContext);
+    let modal = await this.modalController.create({
+      component: UserManagePage
+    });
+    return await modal.present();    
   }
 
   ngOnDestroy() {
@@ -92,8 +172,12 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
         chartOptions: [],
         chartColors: [{
           borderColor: '#000000',
-          backgroundColor: '#ff00ff'
-        }],
+          backgroundColor: '#8d4d9a'
+        },{
+          borderColor: '#000000',
+          backgroundColor: 'lightgrey'
+        }
+      ],
         showLegend: true
       }
       sampleChartConfig.id = vital.id;
@@ -103,11 +187,11 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
         let indexPos = 0;
         let labelVals = vital.label.split("|");
         for (let idVal of idValArr) {
-          sampleChartConfig.chartData[indexPos] = { data: [], label: labelVals[indexPos] }
+          sampleChartConfig.chartData[indexPos] = { data: [], label: labelVals[indexPos], borderWidth: 1, pointHitRadius: 25 }
           indexPos++;
         }
       } else {
-        sampleChartConfig.chartData = [{ data: [], label: vital.label }];
+        sampleChartConfig.chartData = [{ data: [], label: vital.label, borderWidth: 1, pointHitRadius: 25 }];
       }
       sampleChartConfig.chartOptions = vital.chartOptions;
       sampleChartConfig.chartOptions.scales.xAxes[0].time = this.getTimeType();
@@ -137,7 +221,7 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   }
 
   getVitalsData() {    
-    let allVitals = this.userDetails.vitals?this.userDetails.vitals:[];
+    let allVitals = this.userData.vitals?this.userData.vitals:[];
     if (this.displayBy == 'day') {
       this.fromDateVal = moment(this.selectedDate).startOf('day').toString();
       this.toDateVal = moment(this.selectedDate).endOf('day').toString();
@@ -161,7 +245,7 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
     return vitalsOnSelectedDate;
   }
 
-  setChartData(initialize: boolean) {    
+  setChartData(initialize: boolean) {
     if(initialize) {
       this.initializeChartConfig();
     }    
@@ -181,8 +265,9 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
             chartConfig.chartLabels.push(vitalOnSelectedDate.submittedDate.toString());
             let indexPos = 0;
             for (let idVal of idValArr) {
-              if (vitalOnSelectedDate[idVal] != undefined)
+              if (vitalOnSelectedDate[idVal] != undefined && vitalOnSelectedDate[idVal] != "" && vitalOnSelectedDate[idVal] != 0) {
                 chartConfig.chartData[indexPos].data.push(vitalOnSelectedDate[idVal]);
+              }                
               indexPos++;
             }
           }
@@ -190,7 +275,7 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
           chartConfig.chartData[0].data = [null, null];
           for (let vitalOnSelectedDate of vitalsOnSelectedDate) {
             if (vitalOnSelectedDate[chartConfig.id] != undefined &&
-              vitalOnSelectedDate[chartConfig.id] != null) {
+               vitalOnSelectedDate[chartConfig.id] != "" && vitalOnSelectedDate[chartConfig.id] != 0) {
               chartConfig.chartLabels.push(vitalOnSelectedDate.submittedDate.toString());
               chartConfig.chartData[0].data.push(vitalOnSelectedDate[chartConfig.id]);
             }
@@ -201,7 +286,7 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   }
 
   initializeVitalsDateRange() {    
-    let vitalsData = this.userDetails.vitals;
+    let vitalsData = this.userData.vitals;
     let distinctSubmittedByDateStrVals: string[] = [];
     for (let vitalData of vitalsData) {
       if (!distinctSubmittedByDateStrVals.includes(vitalData.submittedDate.toString())) {
@@ -298,16 +383,16 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   }
 
   public sortVitalsInAscOrder() {
-    if(this.userDetails && this.userDetails.vitals) {
-      this.userDetails.vitals.sort((a: Vital, b: Vital) => {
+    if(this.userData && this.userData.vitals) {
+      this.userData.vitals.sort((a: Vital, b: Vital) => {
         return this.getTime(new Date(a.submittedDate)) - this.getTime(new Date(b.submittedDate));
       });
     }
   }
 
   public sortVitalsInDescOrder() {
-    if(this.userDetails && this.userDetails.vitals) {
-      this.userDetails.vitals.sort((a: Vital, b: Vital) => {
+    if(this.userData && this.userData.vitals) {
+      this.userData.vitals.sort((a: Vital, b: Vital) => {
         return this.getTime(new Date(b.submittedDate)) - this.getTime(new Date(a.submittedDate));
       });
     }
@@ -321,8 +406,7 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
     this.session.setFormContext(formContext);
 
     const modal = await this.modalController.create({
-      component: ManageVitalsPage,
-      cssClass: 'vital-modal-css'
+      component: ManageVitalsPage    
     });
     modal.onDidDismiss().then((data) => {
         let formContext = this.formContext;

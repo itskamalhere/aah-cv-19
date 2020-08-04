@@ -17,6 +17,8 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 import { StorageMap } from "@ngx-pwa/local-storage";
 import { AppPreferences } from "@ionic-native/app-preferences/ngx";
 import { FirebaseX } from "@ionic-native/firebase-x/ngx";
+import { FormGroup, FormBuilder } from '@angular/forms';
+import { ValidationService } from '../services/validation.service';
 
 
 @Component({
@@ -33,7 +35,9 @@ import { FirebaseX } from "@ionic-native/firebase-x/ngx";
   ]
 })
 
-export class RegisterPage implements OnInit, OnDestroy, AfterViewInit { 
+export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
+  mobileForm: FormGroup;
+  otpForm: FormGroup;
   statusHeader: string = "";
   statusLabel: string = "";
   mobileNumber: string;
@@ -47,6 +51,7 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild("registerTemplate") private registerTemplate: TemplateRef<object>;
   @ViewChild("otpTemplate") private otpTemplate: TemplateRef<object>;
   @ViewChild("passcodeTemplate") private passcodeTemplate: TemplateRef<object>;
+  @ViewChild("registerCompleteTemplate") private registerCompleteTemplate: TemplateRef<object>;  
   viewTemplate: TemplateRef<object>;
   databaseSub: Subscription;
   otpSub: Subscription;
@@ -55,16 +60,20 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
   otpSubject: BehaviorSubject<OTP_VERIFICATION> = new BehaviorSubject(OTP_VERIFICATION.NOT_STARTED);
   passcodeSubject: BehaviorSubject<PASSCODE_SETTING> = new BehaviorSubject(PASSCODE_SETTING.NOT_STARTED);
 
-  constructor(    
+  constructor( 
+    private formBuilder: FormBuilder,   
     private firebaseService: FirebaseService,
     public session: SessionService,    
     private appPreferences: AppPreferences,
     private storage: StorageMap,
     private auth: AngularFireAuth,
-    private firebase: FirebaseX
+    private firebase: FirebaseX,
+    private validationService: ValidationService
     ) {}
 
   ngOnInit() {
+
+    this.initForm();
     
     this.databaseSub =  this.databaseSubject.subscribe((status) => {
       if (status == DATABASE_VERIFICATION.PENDING) {
@@ -107,14 +116,25 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
         this.statusLabel = "checkmark-done";
         this.viewTemplate = this.passcodeTemplate;
       } else if (status == PASSCODE_SETTING.CONFIRMED) {
-        this.statusHeader = "";
-        this.statusLabel = "";
-        this.writeAppData();        
+        this.writeAppData();
+        this.statusHeader = "Registration Completed";
+        this.statusLabel = "";        
+        this.viewTemplate = this.registerCompleteTemplate;
       }
     });
   }
 
-  verifyMobileNoinDB() {
+  async initForm() {
+    this.mobileForm = this.formBuilder.group({
+      mobileNumber: ['',[ValidationService.required(10,10,"^[0-9]*$")]]
+    });
+    this.otpForm = this.formBuilder.group({
+      otp: ['',[ValidationService.required(6,6,"^[0-9]*$")]]
+    });   
+  }
+
+  verifyMobileNoinDB(mobileNo: string) {
+    this.mobileNumber = mobileNo;
     const me = this;
     this.firebaseService.fetchUsersbyField("mobileNumber",this.mobileNumber,"==").then((users) => {      
       if(users && users.length > 0) {
@@ -225,12 +245,11 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  writeAppData() {
+  async writeAppData() {
     const me = this;
     const appData = this.mobileNumber+","+"true"+","+this.confirmCode;
     if(this.session.isHybrid()) {
-      this.appPreferences.remove("app-data");
-      this.appPreferences.store("app-data",appData).then((res) => {
+      await this.appPreferences.store("app-data",appData).then((res) => {
         me.handleAppData();
       },function(err) {
         console.log("error: " + err);
@@ -239,16 +258,18 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.storage.set("app-data", appData).subscribe(() => {
         me.handleAppData();
-      });      
+      });
     }
-
   }
 
-  handleAppData() {
+  async handleAppData() {
     const me = this;
     console.log("Appdata write success");
     me.session.setMobileNumber(me.mobileNumber);
     me.session.setPassCode(me.confirmCode);
+  }
+
+  login() {
     this.session.registrationSubject.next(REGISTRATION.COMPLETED);
   }
 

@@ -2,27 +2,27 @@
 
   <ion-tab-bar slot="bottom">
 
-    <ion-tab-button *hasPermissions="['home']" tab="home">
+    <ion-tab-button *hasPermissions="['home'];contains:true" tab="home">
       <ion-icon name="medical"></ion-icon>
       <ion-label>AAH</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button *hasPermissions="['patient-list']" (click)="setContext(form_user.PATIENT)" tab="patient-list">      
+    <ion-tab-button *hasPermissions="['patient-list'];contains:true" (click)="setContext(form_user.PATIENT)" tab="patient-list">      
       <ion-icon name="people-circle"></ion-icon> 
       <ion-label>Patients</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button *hasPermissions="['patient-details']" tab="patient-details">
+    <ion-tab-button *hasPermissions="['patient-details'];contains:true" tab="patient-details">
       <ion-icon name="body"></ion-icon>
       <ion-label>Details</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button *hasPermissions="['staff-list']" (click)="setContext(form_user.STAFF)" tab="staff-list">
+    <ion-tab-button *hasPermissions="['staff-list'];contains:true" (click)="setContext(form_user.STAFF)" tab="staff-list">
       <ion-icon name="people"></ion-icon>
       <ion-label>Staff</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button *hasPermissions="['notifications']" tab="notifications">
+    <ion-tab-button *hasPermissions="['notifications'];contains:true" tab="notifications">
       <ion-icon name="notifications"></ion-icon>
       <ion-label>Notifications</ion-label>
     </ion-tab-button>

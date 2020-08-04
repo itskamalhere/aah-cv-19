@@ -1,103 +1,258 @@
-<ion-header>
+<ion-header *ngIf="platform.isPortrait()">
     <ion-toolbar>
-        <ion-buttons slot="start">
-            <ion-back-button defaultHref="home/patient-list"></ion-back-button>
+        <ion-buttons *ngIf="session.getUser().data.userType=='Staff'" slot="start">
+            <ion-back-button></ion-back-button>
         </ion-buttons>
-        <ion-title>PatientDetails</ion-title>
+        <ion-title *ngIf="!userData.firstName"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-title>
+        <ion-title *ngIf="userData.firstName">{{userData.firstName+' '+userData.lastName}}</ion-title>
+    </ion-toolbar>
+    <ion-toolbar>
+        <ion-segment [(ngModel)]="segment">
+            <ion-segment-button value="details">
+                <ion-label>Details</ion-label>
+            </ion-segment-button>
+            <ion-segment-button *ngIf="formContext.userType=='Patient'" value="reports">
+                <ion-label>Reports</ion-label>
+            </ion-segment-button>
+        </ion-segment>
     </ion-toolbar>
 </ion-header>
 
 <ion-content [forceOverscroll]="true">
-    <ion-segment [(ngModel)]="segment">
-        <ion-segment-button value="details">
-            <ion-label>Details</ion-label>
-        </ion-segment-button>
-        <ion-segment-button value="reports">
-            <ion-label>Reports</ion-label>
-        </ion-segment-button>
-    </ion-segment>
     <div [ngSwitch]="segment">
         <div *ngSwitchCase="'details'">
-            <div class="detailsView2">
-                <ion-card *ngIf="user">
-                    <ion-card-header>
-                        <ion-item>
-                            <ion-avatar slot="start">
-                                <img src="../assets/images/male.png">
-                            </ion-avatar>
-                            <ion-label>{{user.firstName}} {{user.lastName}}</ion-label>
-                        </ion-item>
-                        <ion-card-subtitle>UH ID - {{user.uhid}}</ion-card-subtitle>
-                    </ion-card-header>
-              
-                    <ion-card-content>
-                        <ion-grid>
-                            <ion-row>
-                                <ion-col size="4">
-                                    DOB
-                                </ion-col>
-                                <ion-col size="8">
-                                  {{user.dob | dateformat}}
-                                </ion-col>
-                            </ion-row>
-                            <ion-row>
-                                <ion-col size="4">
-                                    Address
-                                </ion-col>
-                                <ion-col size="8">
-                                  {{user.homeAddress}}
-                                </ion-col>
-                            </ion-row>
-                            <ion-row>
-                                <ion-col size="4">
-                                    Mobile Number
-                                </ion-col>
-                                <ion-col size="8">
-                                  {{user.mobileNumber}}
-                                </ion-col>
-                            </ion-row>
-                        </ion-grid>
-                    </ion-card-content>
-                </ion-card>
-            </div>
-            <ion-item>
-                <ion-label>
-                    Vitals
-                </ion-label>
-            </ion-item>
-            <ion-card *ngFor="let vital of userDetails.vitals">
+            <ng-container [ngSwitch]="(loaded && formContext.userType=='Patient')?'Patient'
+            :(loaded && formContext.userType=='Staff')?'Staff' :'feedLoading'">
+            <ng-container *ngSwitchCase="'Patient'">
+            <ion-card
+            [ngClass]="userData.status!='Active'?'ion-card-inactive':'ion-card-active'">
+              <ion-card-header>
+                <ion-item color="primary-contrast">
+                  <ion-avatar slot="start">
+                      <img *ngIf="userData.gender=='Male'" src="../assets/images/male.png">
+                      <img *ngIf="userData.gender=='Female'||userData.gender=='Third Gender'" src="../assets/images/female.png">
+                  </ion-avatar>
+                  <ion-label class="selectable">
+                    <h3>{{userData.firstName+" "+userData.lastName}}</h3>
+                    <p>UH ID - {{userData.uhid}}</p>
+                  </ion-label>
+                  <ion-button *hasPermissions="['can-edit-patient'];contains:true" fill="clear" slot="end" (click)="EditUser()">
+                    <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                  </ion-button>
+              </ion-item>
+              </ion-card-header>
+        
+              <ion-card-content>
+                  <ion-grid>
+
+                    <ion-row>
+                        <ion-col size="4">DOB</ion-col>
+                        <ion-col size="8" class="selectable">{{userData.dob | dateformat}} ({{userData.dob | ageformat}} years)</ion-col>
+                    </ion-row>                     
+                    <ion-row>
+                        <ion-col size="4">Role</ion-col>
+                        <ion-col size="8" class="selectable">{{userData.role.path.substring(userData.role.path.lastIndexOf("/")+1)}}</ion-col>
+                    </ion-row>
+                    <ion-row>
+                        <ion-col size="4">Blood Type</ion-col>
+                        <ion-col size="8" class="selectable">{{userData.bloodType?userData.bloodType:'-'}}</ion-col>
+                    </ion-row>                     
+                    <ion-row>
+                    <ion-col size="4">Room No</ion-col>
+                    <ion-col size="8" class="selectable">{{userData.roomNumber?userData.roomNumber:'-'}}</ion-col>
+                  </ion-row>
+                  <ion-row>                      
+                    <ion-col size="4">Email</ion-col>
+                    <ion-col size="8" class="selectable">
+                        {{userData.emailAddress}}
+                        <a *ngIf="formContext.user.id!=session.getUser().id && userData.emailAddress" href="{{'mailto:'+userData.emailAddress}}">
+                        <ion-icon name="mail">
+                        </ion-icon></a>
+                    </ion-col>
+                  </ion-row>
+                  <ion-row>
+                    <ion-col size="4">Mobile</ion-col>
+                    <ion-col size="8" class="selectable">
+                        {{userData.mobileNumber}}
+                        <a *ngIf="formContext.user.id!=session.getUser().id && userData.mobileNumber" href="{{'tel:+91'+userData.mobileNumber}}">
+                        <ion-icon name="call">
+                        </ion-icon></a>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-card-content>
+          </ion-card>
+          </ng-container>
+        
+          <ng-container *ngSwitchCase="'Staff'">
+            <ion-card
+            [ngClass]="userData.status!='Active'?'ion-card-inactive':'ion-card-active'">
+              <ion-card-header>
+                <ion-item color="primary-contrast">
+                  <ion-avatar slot="start">
+                      <img *ngIf="userData.gender=='Male'" src="../assets/images/male.png">
+                      <img *ngIf="userData.gender=='Female'||userData.gender=='Third Gender'" src="../assets/images/female.png">
+                  </ion-avatar>
+                  <ion-label class="selectable">
+                    <h3>{{userData.firstName+" "+userData.lastName}}</h3>
+                  </ion-label>
+                  <ion-button *hasPermissions="['can-edit-staff'];contains:true" fill="clear" slot="end" (click)="EditUser()">
+                    <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                  </ion-button>
+              </ion-item>
+              </ion-card-header>
+        
+              <ion-card-content>
+                  <ion-grid>                      
+                    <ion-row>
+                      <ion-col size="4">Role</ion-col>
+                      <ion-col size="8" class="selectable">{{userData.role.path.substring(userData.role.path.lastIndexOf("/")+1)}}</ion-col>
+                    </ion-row>            
+                    <ion-row>
+                      <ion-col size="4">DOB</ion-col>
+                      <ion-col size="8" class="selectable">{{userData.dob | dateformat}} ({{userData.dob | ageformat}} years)</ion-col>
+                    </ion-row>
+                    <ion-row>
+                        <ion-col size="4">Email</ion-col>
+                        <ion-col size="8" class="selectable">
+                            {{userData.emailAddress}}
+                            <a *ngIf="formContext.user.id!=session.getUser().id && userData.emailAddress" href="{{'mailto:'+userData.emailAddress}}">
+                            <ion-icon name="mail">
+                            </ion-icon></a>
+                        </ion-col>
+                    </ion-row>
+                    <ion-row>
+                        <ion-col size="4">Mobile</ion-col>
+                        <ion-col size="8" class="selectable">
+                        {{userData.mobileNumber}}
+                        <a *ngIf="formContext.user.id!=session.getUser().id && userData.mobileNumber" href="{{'tel:+91'+userData.mobileNumber}}">
+                        <ion-icon name="call">
+                        </ion-icon></a>
+                    </ion-col>
+                    </ion-row>
+                  </ion-grid>
+              </ion-card-content>
+          </ion-card>
+          </ng-container>  
+          
+          <ng-container *ngSwitchCase="'feedLoading'">
+            <ion-card class="ion-card-active">
+              <ion-card-header>        
+                <ion-item color="primary-contrast">
+                    <ion-avatar slot="start">
+                      <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
+                    </ion-avatar>            
+                    <ion-label class="selectable">
+                      <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
+                      <p><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></p>
+                    </ion-label>
+                </ion-item>          
+              </ion-card-header>
+              <ion-card-content>
+                  <ion-grid>
+                      <ion-row>
+                          <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
+                          <ion-col size="8"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
+                      </ion-row>
+                      <ion-row>
+                          <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
+                          <ion-col size="8"><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></ion-col>
+                      </ion-row>
+                      <ion-row>
+                          <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
+                          <ion-col size="8"><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></ion-col>
+                      </ion-row>
+                      <ion-row>
+                        <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
+                        <ion-col size="8"><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></ion-col>
+                    </ion-row>              
+                  </ion-grid>
+              </ion-card-content>
+          </ion-card>
+
+          <ion-item *ngIf="formContext.userType=='Patient'">
+            <ion-label color="primary">
+                Vitals
+            </ion-label>
+          </ion-item>
+
+            <ion-card *ngFor="let item of [1,2,3,4]" class="ion-card-vital">
                 <ion-card-header>
-                    <ion-card-subtitle>{{vital.submittedDate | timeformat}}  - {{vital.submittedBy}} (submitted by)</ion-card-subtitle>
+                    <ion-card-subtitle><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-card-subtitle>
                 </ion-card-header>
 
                 <ion-card-content>
                     <ion-grid>
                         <ion-row>
                             <ion-col size="6">
-                                <ion-chip>
-                                    <ion-icon name="thermometer-outline"></ion-icon>
-                                    <ion-label> Temp - {{vital.temperature}}&deg;C</ion-label>
-                                </ion-chip>
+                                <ion-label><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-label>
                             </ion-col>
                             <ion-col size="6">
+                                <ion-label><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-label>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row>
+                            <ion-col size="6">
+                                <ion-label><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-label>
+                            </ion-col>
+                            <ion-col size="6">
+                                <ion-label><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-label>
+                            </ion-col>
+                        </ion-row>
+                    </ion-grid>
+                </ion-card-content>
+            </ion-card>          
+          </ng-container>
+        </ng-container>
+
+        <ion-item *ngIf="formContext.userType=='Patient'">
+            <ion-label color="primary">
+                Vitals{{userData.vitals&&userData.vitals.length>0?'':' - no vitals to display'}}
+            </ion-label>
+        </ion-item>
+
+            <ion-card *ngFor="let vital of userData.vitals" class="ion-card-vital">
+                <ion-card-header>
+                    <ion-card-subtitle>{{vital.submittedDate | timeformat}}  - {{vital.submittedBy}} (submitted by)</ion-card-subtitle>
+                </ion-card-header>
+
+                <ion-card-content>
+                    <ion-grid>
+                        <ion-row>                            
+                            <ion-col *ngIf="vital.spo2" size="6">
                                 <ion-chip>
                                     <ion-icon name="flower-outline"></ion-icon>
                                     <ion-label> SPO2 - {{vital.spo2}}</ion-label>
                                 </ion-chip>
                             </ion-col>
-                        </ion-row>
-                        <ion-row>
-                            <ion-col size="6">
+                            <ion-col *ngIf="vital.bpSystolic" size="6">
                                 <ion-chip>
-                                    <ion-icon name="heart-outline"></ion-icon>
-                                    <ion-label> BP - {{vital.bpSystolic}}/{{vital.bpDiastolic}}</ion-label>
+                                    <ion-icon name="analytics-outline"></ion-icon>
+                                    <ion-label> BP - {{vital.bpSystolic+'/'}}{{vital.bpDiastolic}}</ion-label>
                                 </ion-chip>
                             </ion-col>
-                            <ion-col size="6">
+                            <ion-col *ngIf="vital.heartRate" size="3">
                                 <ion-chip>
                                     <ion-icon name="heart-outline"></ion-icon>
-                                    <ion-label> BP - {{vital.bpSystolic}}/{{vital.bpDiastolic}}</ion-label>
+                                    <ion-label>{{vital.heartRate}}</ion-label>
                                 </ion-chip>
+                            </ion-col>
+                            <ion-col *ngIf="vital.temperature" size="4">
+                                <ion-chip>
+                                    <ion-icon name="thermometer-outline"></ion-icon>
+                                    <ion-label>{{vital.temperature}}°F</ion-label>
+                                </ion-chip>
+                            </ion-col>
+                            <ion-col *ngIf="vital.bloodSugar" size="5">
+                                <ion-chip>
+                                    <ion-icon name="water-outline"></ion-icon>
+                                    <ion-label>{{vital.bloodSugar}} mg/dL</ion-label>
+                                </ion-chip>
+                            </ion-col>
+                        </ion-row>
+                        <ion-row *ngIf="vital.note">
+                            <ion-col size="12">
+                                <ion-text> Notes - {{vital.note}}</ion-text>
                             </ion-col>
                         </ion-row>
                     </ion-grid>
@@ -188,15 +343,18 @@
             </ion-list>
         </div>
     </div>
-    <ion-fab *ngIf="segment == 'details'" (click)="showVitalsPage()" vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button>
-            <ion-icon name="pulse"></ion-icon>
-        </ion-fab-button>
-    </ion-fab>
-    <ion-fab *ngIf="segment == 'details'" (click)="showVitalsPage()" vertical="bottom" horizontal="start" slot="fixed">
+    <ng-container *hasPermissions="['can-add-vital'];contains:true">        
+        <ion-fab *ngIf="segment=='details' && formContext.userType=='Patient'" (click)="showVitalsPage()" vertical="bottom" horizontal="end" slot="fixed">
+            <ion-fab-button>
+                <ion-icon name="pulse"></ion-icon>
+            </ion-fab-button>
+        </ion-fab>
+    </ng-container>
+
+    <!-- <ion-fab *ngIf="segment == 'details'" (click)="showVitalsPage()" vertical="bottom" horizontal="start" slot="fixed">
         <ion-fab-button>
             <ion-icon name="chatbubble-outline"></ion-icon>
         </ion-fab-button>
-    </ion-fab>
+    </ion-fab> -->
 
 </ion-content>

@@ -1,14 +1,49 @@
-ion-card {
-    --background: radial-gradient(farthest-corner at 0% 0%, #ffffff 80%, #8d4d9a 20%);
-    border-color: #8d4d9a;
-    border-style: solid;
-    border-width: thin;
-    border-radius: 25px;
-    min-height: 213px;
-  }
-  
-  ion-fab-button {
-    --border-color: #ffffff;
-    --border-style: solid;
-    --border-width: thin;
-  }
+ion-content {
+  //--ion-background-color: #f4f5f8;
+}
+
+h3 {
+  color: #000000 !important;
+}
+
+p {
+  color: #737373 !important;
+}
+
+ion-item-divider {
+  background-color: #ffffff;
+  color: #ffffff;
+}
+
+.ion-card-active {
+  --background: radial-gradient(farthest-corner at 0% 0%, #ffffff 80%, #8d4d9a 20%);
+  border-color: #8d4d9a;
+  border-style: solid;
+  border-width: thin;
+  border-radius: 25px;
+  min-height: 213px;
+}
+
+.ion-card-inactive {
+  --background: radial-gradient(farthest-corner at 0% 0%, #f4f5f8 80%, #8d4d9a 20%);  
+  border-color: #8d4d9a;
+  border-style: solid;
+  border-width: thin;
+  border-radius: 25px;
+  min-height: 213px;  
+}
+
+.ion-card-vital {
+  --background: #ffffff;
+  border-color: #8d4d9a;
+  border-style: solid;
+  border-width: thin;
+  border-radius: 25px;
+  //min-height: 173px;
+}
+
+ion-fab-button {
+  --border-color: #ffffff;
+  --border-style: solid;
+  --border-width: thin;
+}

@@ -3,6 +3,7 @@ import { User } from '../model/user-model';
 import { BehaviorSubject } from 'rxjs';
 import { Platform } from "@ionic/angular";
 import { Device } from '@capacitor/core';
+import { Router, CanActivate, ActivatedRouteSnapshot } from "@angular/router";
 import {Plugins, HapticsImpactStyle } from '@capacitor/core';
 import { FirebaseX } from "@ionic-native/firebase-x/ngx";
 import { FirebaseService } from './firebase.service';
@@ -10,7 +11,7 @@ import { FirebaseService } from './firebase.service';
 const { Haptics } = Plugins;
 
 @Injectable()
-export class SessionService  implements OnInit, OnDestroy {
+export class SessionService implements OnInit, OnDestroy, CanActivate {
   hybrid: boolean;
   gcmToken: string;
   user: User;
@@ -26,7 +27,8 @@ export class SessionService  implements OnInit, OnDestroy {
   constructor(
     private platform: Platform,
     private firebase: FirebaseX,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
+    private router: Router
     ) {
       if(this.platform.is("hybrid")) {
         this.hybrid = true;
@@ -53,6 +55,23 @@ export class SessionService  implements OnInit, OnDestroy {
     }
   }
 
+  canActivate(route: ActivatedRouteSnapshot): boolean {
+    let path = route.url[0].path;
+    if(path == "login") {
+      if (this.authenticationSubject.value == AUTHENTICATION.SUCCESS && this.user.data.userType == "Staff") {
+        this.router.navigate(["home/patient-list"]);
+        return false;
+      } else if (this.authenticationSubject.value == AUTHENTICATION.SUCCESS && this.user.data.userType == "Patient") {
+        this.router.navigate(['home/patient-details']);
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return true;
+    }
+  }
+
   vibrate(effect: EFFECT) {
     if(effect == EFFECT.KEY_PRESS) {
       if(this.hybrid) {
@@ -75,12 +94,6 @@ export class SessionService  implements OnInit, OnDestroy {
   }
 
   getFormContext() {
-    // this.formContext = {} as FormContext;
-    // //this.formContext.userId = "4R06RA65XbwOOpQTuI3G";
-    // this.formContext.userId = "SLQOqFBYgzKzlhHWYIP0";
-    // this.formContext.userType = FORM_USER.PATIENT;
-    // this.formContext.action = FORM_ACTION.EDIT;
-    // this.formContext.parentUrl = "/home/tab5";
     return this.formContext;
   }
 
@@ -167,8 +180,8 @@ export enum EFFECT {
   MEDIUM = 1
 }
 
-export interface FormContext {
-  userId: string;
+export interface FormContext {  
+  user: User;
   userType: FORM_USER;
   action: FORM_ACTION;
   modalName: FORM_MODAL;

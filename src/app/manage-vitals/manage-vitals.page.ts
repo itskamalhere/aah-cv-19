@@ -6,6 +6,7 @@ import { FormModel, Vital } from '../model/user-model';
 import { SessionService, FormContext } from '../services/session.service';
 import { AngularFireFunctions } from '@angular/fire/functions';
 import * as moment from 'moment';
+import { first } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manage-vitals',
@@ -56,6 +57,29 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
     this.initValues = this.vitalForm.value;
   }
 
+  isFormInvalid() {    
+    let form = this.vitalForm.value;
+    let formValues = "";
+    let hasNoValue: boolean = false;
+    let bpAvailable: boolean = false;
+    let invalidBp: boolean = false;
+    let sys = form["bpSystolic"];
+    let dias = form["bpDiastolic"];
+    bpAvailable = ((sys && sys.length>0) || (dias && dias.length>0))?true:false;
+    if (bpAvailable) {
+      invalidBp = (sys && dias && sys.length > 0 && dias.length > 0)?false:true;
+      return invalidBp;
+    } else {
+      Object.keys(form).forEach((key) =>{
+        if(key != "note") {
+          formValues = formValues + form[key];
+        }        
+      });
+      hasNoValue = (formValues && formValues.trim().length > 0)?false:true;      
+      return hasNoValue;
+    }
+  }
+
   formVital(forUpdate: boolean) {
     let form = this.vitalForm.value;
     let vital = {} as Vital;
@@ -87,9 +111,8 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
   async addVital() {
     await this.presentLoading();    
     let vital = this.formVital(false);    
-    this.firebaseService.addVital(this.formContext.userId,vital).then(res => {
-      //this.subscribeUsers(record,res.id,(saveAction.length<=0));
-      this.dismissLoading(true);
+    this.firebaseService.addVital(this.formContext.user.id,vital).then(res => {
+      this.notifyUsers();
       }).catch(error => {
         console.log(error);
         this.loadingController.dismiss();
@@ -101,6 +124,23 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
 
   }
 
+  notifyUsers() {
+    var id = this.formContext.user.id;
+    var uhid = this.formContext.user.data.uhid;
+    var firstName = this.formContext.user.data.firstName;
+    var lastName = this.formContext.user.data.lastName;
+    var fullName = firstName+" "+lastName;
+    this.functions.httpsCallable("vitalAdded")(
+      {id:id,uhid:uhid,fullName:fullName}).pipe(first())
+    .subscribe(resp => {
+      console.log({ resp });
+      this.dismissLoading();
+    }, err => {
+      console.error({ err });
+      this.dismissLoading();
+    });
+  }
+
   async presentLoading() {
     let loading = await this.loadingController.create({
       message: 'Saving...'
@@ -108,13 +148,11 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
     await loading.present();
   }
 
-  async dismissLoading(close: boolean) {
+  async dismissLoading() {
     this.loadingController.dismiss();
     this.presentToast("Vitals added successfully");
     this.vitalForm.reset(this.initValues);
-    if(close) {
-      this.modalController.dismiss();     
-    }
+    this.modalController.dismiss();    
   }
 
   async presentToast(message: string) {

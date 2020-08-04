@@ -1,16 +1,17 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { SessionService } from './services/session.service';
 
 const routes: Routes = [
   {
     path: 'home',
     loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
   },
-  {
-    path: '',
-    redirectTo: 'home',
-    pathMatch: 'full'
-  },
+  // {
+  //   path: '',
+  //   redirectTo: 'home',
+  //   pathMatch: 'full'
+  // },
   {
     path: 'patient-details',
     loadChildren: () => import('./patient-details/patient-details.module').then( m => m.PatientDetailsPageModule)
@@ -25,7 +26,8 @@ const routes: Routes = [
   },
   {
     path: 'login',
-    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule),
+    canActivate: [SessionService]
   },
   {
     path: 'user-manage',

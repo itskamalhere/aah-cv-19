@@ -5,6 +5,7 @@ import { SessionService } from '../services/session.service';
 export class HasPermissionsDirective implements OnInit {
 
   @Input('hasPermissions') permissions: string[];
+  @Input('hasPermissionsContains') contains: boolean;
 
   constructor(
     private session: SessionService,
@@ -12,8 +13,8 @@ export class HasPermissionsDirective implements OnInit {
     private viewContainer: ViewContainerRef
   ) {}
   
-  ngOnInit(): void {    
-    if(this.hasPermissions(this.permissions)){
+  ngOnInit(): void {   
+    if((this.hasPermissions(this.permissions)&&this.contains) || (!this.hasPermissions(this.permissions)&&!this.contains)){
       this.viewContainer.createEmbeddedView(this.templateRef);
     } else {
       this.viewContainer.clear();

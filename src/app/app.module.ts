@@ -25,8 +25,11 @@ import { ServiceWorkerModule } from '@angular/service-worker';
   entryComponents: [],
   imports: [
     BrowserModule,
-    BrowserAnimationsModule,
-    IonicModule.forRoot(),
+    BrowserAnimationsModule,    
+    IonicModule.forRoot({     
+      scrollPadding: false,
+      scrollAssist: false
+    }),
     AppRoutingModule,
     AngularFireModule.initializeApp(environment.firebaseConfig),
     AngularFirestoreModule,

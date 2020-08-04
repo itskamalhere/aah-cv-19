@@ -1,5 +1,9 @@
+<ion-header>
+  <ion-toolbar class="ion-text-center ion-align-self-end">
+    <img src="/assets/images/aah_1024x500.png" class="image-css"><img>
+  </ion-toolbar>
+</ion-header>
 <ion-content [fullscreen]="true">
-  <img src="/assets/images/logo.png"><img>
   <div id="container">   
     <ng-container *ngTemplateOutlet="viewTemplate"></ng-container>
   </div>
@@ -30,19 +34,19 @@
       <ion-row [@shakeAnimation]="shakeAnimation" (@shakeAnimation.done)="resetShake()">
         <ion-col size="2">
         </ion-col>
-        <ion-col  size="2">
+        <ion-col size="2">
           <ion-icon *ngIf="passCode.length<=0" name="ellipse-outline"></ion-icon>
           <ion-icon *ngIf="passCode.length>0" name="ellipse"></ion-icon>
         </ion-col>
-        <ion-col  size="2">
+        <ion-col size="2">
           <ion-icon *ngIf="passCode.length<=1" name="ellipse-outline"></ion-icon>
           <ion-icon *ngIf="passCode.length>1" name="ellipse"></ion-icon>
         </ion-col>
-        <ion-col  size="2">
+        <ion-col size="2">
           <ion-icon *ngIf="passCode.length<=2" name="ellipse-outline"></ion-icon>
           <ion-icon *ngIf="passCode.length>2" name="ellipse"></ion-icon>
         </ion-col>
-        <ion-col  size="2">
+        <ion-col size="2">
           <ion-icon *ngIf="passCode.length<=3" name="ellipse-outline"></ion-icon>
           <ion-icon *ngIf="passCode.length>3" name="ellipse"></ion-icon>
         </ion-col>
@@ -56,25 +60,29 @@
       </ion-row>
       <ion-row>
         <ion-col size="4" *ngFor="let num of numbers" >
-          <ion-button (click)="add(num)" size="large" color="medium" fill="outline" shape="round">
+          <ion-button (click)="add(num)" size="large" color="light" fill="solid" shape="round">
             {{num}}
           </ion-button>
         </ion-col>
       </ion-row>
       <ion-row>
-        <ion-col >
-          <ion-button (click)="add(zero)" size="large" color="medium" fill="outline" shape="round">
+        <ion-col size="4" class="ion-text-center ion-align-self-end">
+          <ion-button (click)="deleteCode()" color="light" fill="solid" shape="round">
+            <<
+          </ion-button>
+        </ion-col>        
+        <ion-col size="4">
+          <ion-button (click)="add(zero)" size="large" color="light" fill="solid" shape="round">
             {{zero}}
           </ion-button>
         </ion-col>
       </ion-row>
+      <ion-row><ion-col>&nbsp;</ion-col></ion-row>
       <ion-row>
-        <ion-col  size="6">
-          <ion-button (click)="deleteCode()" color="medium" fill="outline" shape="round">          
-            <<
-          </ion-button>          
-        </ion-col>
-        <ion-col  size="6">
+        <ion-col size="12">
+          <ion-button (click)="forgotCode()" color="light" size="small" fill="solid" shape="round">
+            Forgot Passcode
+          </ion-button>
         </ion-col>
       </ion-row>
     </ion-grid>

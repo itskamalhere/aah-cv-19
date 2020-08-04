@@ -5,6 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { PatientDetailsPageRoutingModule } from './patient-details-routing.module';
 import { PatientDetailsPage } from './patient-details.page';
 import { ChartsModule } from 'ng2-charts';
+import { SharedDirectivesModule } from '../directives/shared-directives/shared-directives.module';
 import { FormatPipeModule } from '../format.pipe.module';
 
 @NgModule({
@@ -14,6 +15,7 @@ import { FormatPipeModule } from '../format.pipe.module';
     ReactiveFormsModule,
     IonicModule,
     ChartsModule,
+    SharedDirectivesModule,
     FormatPipeModule,
     PatientDetailsPageRoutingModule
   ],

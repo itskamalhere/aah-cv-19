@@ -25,6 +25,16 @@ export class TimeFormatPipe implements PipeTransform {
 }
 
 @Pipe({
+  name: 'ageformat'
+})
+
+export class AgeFormatPipe implements PipeTransform {
+  transform(value: any, ...args: any[]): any {        
+    return moment().diff(value, "years");
+  }
+}
+
+@Pipe({
   name: 'highlight'
 })
 

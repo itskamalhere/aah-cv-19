@@ -28,14 +28,16 @@ export const DAY_TIMESCALE: TimeScale = {
     unit: 'hour',
     displayFormats: {
         hour: 'h:mm a'
-    }
+    },
+    tooltipFormat:'h:mm a'
 };
 
 export const WEEK_TIMESCALE: TimeScale = {
     unit: 'day',
     displayFormats: {
         day: 'MMM D'
-    }
+    },
+    tooltipFormat:'MMM D'
 };
 
 export const MONTH_TIMESCALE: TimeScale = {
@@ -43,129 +45,20 @@ export const MONTH_TIMESCALE: TimeScale = {
     stepSize: 5,
     displayFormats: {
         day: 'MMM D'
-    }
+    },
+    tooltipFormat:'MMM D'
 };
 
 export const YEAR_TIMESCALE: TimeScale = {
     unit: 'month',
     displayFormats: {
         month: 'MMM YY'
-    }
+    },
+    tooltipFormat:'MMM YY'
 };
 
 export class VitalsConfig {
     vitalsConfigModel: VitalsMetadata[] = [
-        {
-            id: 'temperature',
-            label: 'Temperature',
-            chartOptions: {
-                responsive: true,
-                scales: {
-                    yAxes: [{
-                        gridLines: {
-                            display: true,
-                            color: "black"
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: "Temperature",
-                            fontColor: "red"
-                        },
-                        type: 'linear',
-                        ticks: {
-                            max: 110,
-                            min: 90,
-                            stepSize: 4
-                        }
-                    }],
-                    xAxes: [{
-                        display: true,
-                        gridLines: {
-                            display: true,
-                            color: "black"
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: "Time",
-                            fontColor: "red"
-                        },
-                        type: 'time',
-                        time: {
-                            unit: 'hour',
-                            displayFormats: {
-                                hour: 'h:mm a',
-                                day: 'DDD M'
-                            }
-                        }
-                    }]
-                }
-            }
-        },
-        {
-            id: 'bpSystolic|bpDiastolic',
-            label: 'Systolic|Diastolic',
-            chartOptions: {
-                responsive: true,
-                scales: {
-                    yAxes: [{
-                        // id: "bpSystolic",
-                        gridLines: {
-                            display: true,
-                            color: "black"
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: "Systolic",
-                            fontColor: "red"
-                        },
-                        type: 'linear',
-                        ticks: {
-                            max: 200,
-                            min: 10,
-                            stepSize: 40
-                        }
-                    },
-                    {
-                        // id: "bpDiastolic",
-                        position: 'right',
-                        gridLines: {
-                            display: true,
-                            color: "black"
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: "Diastolic",
-                            fontColor: "red"
-                        },
-                        type: 'linear',
-                        ticks: {
-                            max: 200,
-                            min: 10,
-                            stepSize: 40
-                        }
-                    }],
-                    xAxes: [{
-                        display: true,
-                        gridLines: {
-                            display: true,
-                            color: "black"
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: "Time",
-                            fontColor: "red"
-                        },
-                        type: 'time',
-                        time: {
-                            unit: 'hour',
-                            displayFormats: {
-                                hour: 'h:mm a'
-                            }
-                        }
-                    }]
-                }
-            }
-        },
         {
             id: 'spo2',
             label: 'SPO2',
@@ -174,38 +67,220 @@ export class VitalsConfig {
                 scales: {
                     yAxes: [{
                         gridLines: {
-                            display: true,
-                            color: "black"
+                            display: true                           
                         },
                         scaleLabel: {
                             display: true,
-                            labelString: "SPO2",
-                            fontColor: "red"
+                            labelString: "SPO2"                           
                         },
                         type: 'linear',
                         ticks: {
-                            max: 120,
-                            min: 0,
-                            stepSize: 20
+                            max: 100,
+                            min: 60,
+                            stepSize: 10
                         }
                     }],
                     xAxes: [{
                         display: true,
                         gridLines: {
-                            display: true,
-                            color: "black"
+                            display: true                            
                         },
                         scaleLabel: {
                             display: true,
-                            labelString: "Time",
-                            fontColor: "red"
+                            labelString: "Time"                           
                         },
                         type: 'time',
                         time: {
                             unit: 'hour',
                             displayFormats: {
                                 hour: 'h:mm a'
-                            }
+                            },
+                            tooltipFormat:'h:mm a'
+                        }
+                    }]
+                }
+            }
+        },
+        {
+            id: 'temperature',
+            label: 'Temperature',
+            chartOptions: {
+                responsive: true,
+                scales: {
+                    yAxes: [{
+                        gridLines: {
+                            display: true                            
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Temperature °F"                            
+                        },
+                        type: 'linear',
+                        ticks: {
+                            max: 110,
+                            min: 90,
+                            stepSize: 5
+                        }
+                    }],
+                    xAxes: [{
+                        display: true,
+                        gridLines: {
+                            display: true                            
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Time"
+                        },
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'h:mm a',
+                                day: 'DDD M'
+                            },
+                            tooltipFormat:'h:mm a'
+                        }
+                    }]
+                }
+            }
+        },
+        {
+            id: 'heartRate',
+            label: 'Heart Rate',
+            chartOptions: {
+                responsive: true,
+                scales: {
+                    yAxes: [{
+                        gridLines: {
+                            display: true                           
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Heart Rate"                           
+                        },
+                        type: 'linear',
+                        ticks: {
+                            max: 200,
+                            min: 30,
+                            stepSize: 50
+                        }
+                    }],
+                    xAxes: [{
+                        display: true,
+                        gridLines: {
+                            display: true                            
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Time"                           
+                        },
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'h:mm a'
+                            },
+                            tooltipFormat:'h:mm a'
+                        }
+                    }]
+                }
+            }
+        },        
+        {
+            id: 'bpSystolic|bpDiastolic',
+            label: 'Systolic|Diastolic',
+            chartOptions: {
+                responsive: true,
+                scales: {
+                    yAxes: [{                        
+                        gridLines: {
+                            display: true                            
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Systolic"                           
+                        },
+                        type: 'linear',
+                        ticks: {
+                            max: 250,
+                            min: 60,
+                            stepSize: 50
+                        }
+                    },
+                    {
+                        position: 'right',
+                        gridLines: {
+                            display: true                           
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Diastolic"                           
+                        },
+                        type: 'linear',
+                        ticks: {
+                            max: 250,
+                            min: 60,
+                            stepSize: 50
+                        }
+                    }],
+                    xAxes: [{
+                        display: true,
+                        gridLines: {
+                            display: true                            
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Time"                           
+                        },
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'h:mm a'
+                            },
+                            tooltipFormat:'h:mm a'
+                        }
+                    }]
+                }
+            }
+        },
+        {
+            id: 'bloodSugar',
+            label: 'Blood Sugar',
+            chartOptions: {
+                responsive: true,
+                scales: {
+                    yAxes: [{
+                        gridLines: {
+                            display: true                           
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Blood Sugar (mg/dL)"
+                        },
+                        type: 'linear',
+                        ticks: {
+                            max: 400,
+                            min: 50,
+                            stepSize: 100
+                        }
+                    }],
+                    xAxes: [{
+                        display: true,
+                        gridLines: {
+                            display: true                            
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Time"                           
+                        },
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'h:mm a'
+                            },
+                            tooltipFormat:'h:mm a'
                         }
                     }]
                 }

@@ -1,69 +1,138 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>{{ formContext.userType }} List</ion-title>
+  <ion-toolbar  *ngIf="!searchOpen" class="ion-no-padding ion-text-center ion-align-self-center">    
+    <img src="/assets/images/aah_1024x500.png" class="image-css" [@slideUp]><img>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="selectSearch()" [@slideRight]>
+        <ion-icon slot="icon-only" name="search"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-searchbar animated 
-    [placeholder]="formContext.userType=='Patient'?'Search by name, uhid or mobile no':'Search by name or mobile no'" 
-    showCancelButton="focus" (ionChange)="filterData($event)">
+  <ion-toolbar *ngIf="searchOpen">
+    <ion-searchbar #searchBar
+    [@slideLeft]
+    [placeholder]="formContext.userType=='Patient'?'Search by name, uhid or mobile no':'Search by name or mobile no'"
+    showCancelButton="always"
+    focus
+    (ionChange)="filterData($event,null)"
+    (ionCancel)="cancelSearch()">
   </ion-searchbar>
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment *ngIf="formContext.userType=='Patient'" [(ngModel)]="segment" (ionChange)="segmentChanged($event)">
-      <ion-segment-button value="assigned">
-          <ion-label>Assigned</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="all">
-          <ion-label>All</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
+  </ion-toolbar>  
+  <ng-container *hasPermissions="['can-view-all-users'];contains:true">
+    <ion-toolbar *ngIf="!searchOpen && formContext.userType=='Patient'">
+      <ion-segment [(ngModel)]="segment" (ionChange)="segmentChanged($event)" [@slideUp]>
+        <ion-segment-button value="assigned">
+            <ion-label>Assigned</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="all">
+            <ion-label>All</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </ion-toolbar>
+  </ng-container>
+  <ion-item-divider *hasPermissions="['can-view-all-users'];contains:false">
+    <ion-label color="primary">    
+      {{ segment.toUpperCase() }}
+    </ion-label>
+  </ion-item-divider>
+  
+  <ng-container *hasPermissions="['can-view-all-users'];contains:true">
+    <ion-item-divider *ngIf="searchOpen && formContext.userType=='Patient'">
+      <ion-label color="primary" [@slideLeft]>
+        {{ segment.toUpperCase() }}
+      </ion-label>
+    </ion-item-divider>
+  </ng-container>  
 </ion-header>
 
 <ion-content [forceOverscroll]="true">
 
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+  <ion-fab *hasPermissions="['can-add-user'];contains:true" vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click) = "addUser()">
-      <ion-icon name="add"></ion-icon>
+      <ion-icon name="person-add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 
-  <ng-container *ngIf="loaded; else feedLoading;">
-    <ion-card *ngFor="let user of users;" (click) = "showDetails(user.id)">
+  <ng-container [ngSwitch]="(loaded && formContext.userType=='Patient')?'Patient'
+    :(loaded && formContext.userType=='Staff')?'Staff' :'feedLoading'">
+    <ng-container *ngSwitchCase="'Patient'">
+    <ion-card *ngFor="let user of users;"
+    [ngClass]="user.data.status!='Active'?'ion-card-inactive':'ion-card-active'"
+     (click) = "showDetails(user)">
       <ion-card-header>
         <ion-item color="primary-contrast">
           <ion-avatar slot="start">
-              <img *ngIf="user.data.gender=='Male'" src="../assets/images/male.png">
-              <img *ngIf="user.data.gender=='Female'||user.data.gender=='Third Gender'" src="../assets/images/female.png">
+              <img [src]="getAvatar(user.data.gender,user.data.role)">              
           </ion-avatar>
           <ion-label class="selectable">
             <h3 [innerHtml]="user.data.firstName+' '+user.data.lastName | highlight:searchTerm"></h3>
             <p [innerHtml]="'UH ID - ' + user.data.uhid | highlight:searchTerm"></p>
           </ion-label>
-      </ion-item>      
+      </ion-item>
       </ion-card-header>
 
       <ion-card-content>
           <ion-grid>
               <ion-row>
                   <ion-col size="4">DOB</ion-col>
-                  <ion-col size="8">{{user.data.dob | dateformat}}</ion-col>
+                  <ion-col size="8" class="selectable">{{user.data.dob | dateformat}} ({{user.data.dob | ageformat}} years)</ion-col>
               </ion-row>
               <ion-row>
-                  <ion-col size="4">Address</ion-col>
-                  <ion-col size="8">{{user.data.homeAddress}}</ion-col>
-              </ion-row>
-              <ion-row>
-                  <ion-col size="4">Mobile</ion-col>
-                  <ion-col size="8" class="selectable" [innerHtml]="user.data.mobileNumber | highlight:searchTerm"></ion-col>
-              </ion-row>
+                <ion-col size="4">Role</ion-col>
+                <ion-col size="8" class="selectable">{{user.data.role.path.substring(user.data.role.path.lastIndexOf("/")+1)}}</ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="4">Blood Type</ion-col>
+              <ion-col size="8" class="selectable">{{user.data.bloodType?user.data.bloodType:'-'}}</ion-col>
+            </ion-row>            
+            <ion-row>
+              <ion-col size="4">Room No</ion-col>
+              <ion-col size="8" class="selectable">{{user.data.roomNumber?user.data.roomNumber:'-'}}</ion-col>
+            </ion-row>
           </ion-grid>
       </ion-card-content>
   </ion-card>
   </ng-container>
+
+  <ng-container *ngSwitchCase="'Staff'">
+    <ion-card *ngFor="let user of users;"
+    [ngClass]="user.data.status!='Active'?'ion-card-inactive':'ion-card-active'"
+     (click) = "showDetails(user)">
+      <ion-card-header>
+        <ion-item color="primary-contrast">
+          <ion-avatar slot="start">
+            <img [src]="getAvatar(user.data.gender,user.data.role)">              
+          </ion-avatar>
+          <ion-label class="selectable">
+            <h3 [innerHtml]="user.data.firstName+' '+user.data.lastName | highlight:searchTerm"></h3>            
+          </ion-label>
+      </ion-item>
+      </ion-card-header>
+
+      <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="4">Role</ion-col>
+              <ion-col size="8" class="selectable">{{user.data.role.path.substring(user.data.role.path.lastIndexOf("/")+1)}}</ion-col>
+            </ion-row>            
+            <ion-row>
+              <ion-col size="4">DOB</ion-col>
+              <ion-col size="8" class="selectable">{{user.data.dob | dateformat}} ({{user.data.dob | ageformat}} years)</ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="4">Email</ion-col>
+              <ion-col size="8" class="selectable">{{user.data.emailAddress?user.data.emailAddress:'-'}}</ion-col>
+            </ion-row>            
+            <ion-row>
+              <ion-col size="4">Mobile</ion-col>
+              <ion-col size="8" class="selectable" [innerHtml]="user.data.mobileNumber | highlight:searchTerm"></ion-col>
+          </ion-row>
+          </ion-grid>
+      </ion-card-content>
+  </ion-card>
+  </ng-container>  
   
-  <ng-template #feedLoading>
-    <ion-card *ngFor="let item of [1,2,3,4,5,6,7]">
+  <ng-container *ngSwitchCase="'feedLoading'">
+    <ion-card class="ion-card-active" *ngFor="let item of [1,2,3,4,5,6,7]">
       <ion-card-header>        
         <ion-item color="primary-contrast">
             <ion-avatar slot="start">
@@ -79,19 +148,24 @@
           <ion-grid>
               <ion-row>
                   <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
-                  <ion-col size="8"><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></ion-col>
-              </ion-row>
-              <ion-row>
-                  <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
                   <ion-col size="8"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
               </ion-row>
               <ion-row>
                   <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
                   <ion-col size="8"><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></ion-col>
               </ion-row>
+              <ion-row>
+                  <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
+                  <ion-col size="8"><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></ion-col>
+              </ion-row>
+              <ion-row>
+                <ion-col size="4"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-col>
+                <ion-col size="8"><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></ion-col>
+            </ion-row>              
           </ion-grid>
       </ion-card-content>
   </ion-card>
-  </ng-template>
+  </ng-container>
+</ng-container>
 
 </ion-content>

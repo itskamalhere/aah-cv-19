@@ -5,9 +5,11 @@ import { AppPreferences } from "@ionic-native/app-preferences/ngx";
 import { StorageMap } from "@ngx-pwa/local-storage";
 import { Subscription } from 'rxjs';
 import { SessionService, REGISTRATION, AUTHENTICATION, FormContext, FORM_USER } from "./services/session.service";
-import { Plugins } from '@capacitor/core';
+import { Plugins, StatusBarStyle } from '@capacitor/core';
+import { FirebaseX } from '@ionic-native/firebase-x/ngx';
+import { User, UserData } from './model/user-model';
 
-const { StatusBar } = Plugins;
+const { SplashScreen,StatusBar } = Plugins;
 
 @Component({
   selector: 'app-root',
@@ -24,7 +26,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
     private appPreferences: AppPreferences,
     private storage: StorageMap,
-    private session: SessionService
+    private session: SessionService,
+    private firebase: FirebaseX
   ) {}
 
   ngOnInit() {
@@ -35,7 +38,41 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if(this.hybrid) {
       StatusBar.setBackgroundColor({ color: "#ffffff" });
+      StatusBar.setStyle({ style: StatusBarStyle.Light });
+      StatusBar.show();
+      SplashScreen.hide();
+      this.firebase.onMessageReceived().subscribe((data) => {
+        if(data && data.id) {
+          let formContext = this.session.getFormContext();
+          if (!formContext || (formContext && !formContext.user)) {
+            formContext = {} as FormContext;
+            let user = {} as User;
+            let userData = {} as UserData;
+            user.data = userData;
+            formContext.user = user;
+          }
+          if(data.uhid) {
+            formContext.user.data.uhid = data.uhid;
+          }
+          formContext.user.id = data.id;
+          formContext.userType = FORM_USER.PATIENT;
+          this.session.setFormContext(formContext);
+          if(this.session.authenticationSubject.value == AUTHENTICATION.SUCCESS) {
+            this.router.navigate(['patient-details']);
+          } else {
+            this.session.authenticationSubject.next(AUTHENTICATION.PENDING);
+          }
+        } else {
+          if(this.session.authenticationSubject.value == AUTHENTICATION.SUCCESS) {
+            this.router.navigate(['patient-details']);
+            //this.session.authenticationSubject.next(AUTHENTICATION.SUCCESS);
+          } else {
+            this.session.authenticationSubject.next(AUTHENTICATION.PENDING);
+          }
+        }
+      });
     }
+
     this.session.registrationSubject.next(REGISTRATION.CHECK);
     this.registrationSub = this.session.registrationSubject.subscribe((status) => {
       if (status == REGISTRATION.CHECK) {
@@ -43,22 +80,27 @@ export class AppComponent implements OnInit, OnDestroy {
       } else if (status == REGISTRATION.COMPLETED) {
         this.session.authenticationSubject.next(AUTHENTICATION.PENDING);
       } else if (status == REGISTRATION.NOT_COMPLETED) {
-        this.router.navigate(["register"]);        
+        this.router.navigate(["register"]);
       }
     });
 
     this.authenticationSub = this.session.authenticationSubject.subscribe((status) => {
       if (status == AUTHENTICATION.PENDING || status == AUTHENTICATION.LOGGED_OUT) {
-        this.router.navigate(["login"]);        
+        this.router.navigate(["login"]);
       } else if (status == AUTHENTICATION.SUCCESS) {
-        let formContext = {} as FormContext;
-        formContext.userType = FORM_USER.PATIENT;
-        this.session.setFormContext(formContext);
-        let route = "home/patient-list";
-        if(this.session.getUser().data.userType == "Patient") {
-          route = "home/patient-details";
+        let formContext = this.session.getFormContext();
+        if (!formContext) {
+          formContext = {} as FormContext;
+          formContext.userType = FORM_USER.PATIENT;
+          this.session.setFormContext(formContext);
+          let route = "patient-list";
+          if(this.session.getUser().data.userType == "Patient") {
+            route = "patient-details";
+          }
+          this.router.navigate(['home',route]);
+        } else {
+          this.router.navigate(['patient-details']);
         }
-        this.router.navigate([route]);
       }
     });
   }

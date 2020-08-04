@@ -9,6 +9,7 @@
     }
   },
   "projects": {
-    "default": "aah-cv-19"
+    "default": "aah-cv-19",
+    "AAH-PROD": "aah-app-7ad54"
   }
 }
