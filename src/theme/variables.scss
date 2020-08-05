@@ -2,15 +2,19 @@
 // http://ionicframework.com/docs/theming/
 
 /** Ionic CSS Variables **/
-:root {
+:root {  
   --ion-font-family:  'OpenSans'!important;
   /** primary **/
-  --ion-color-primary: #8d4d9a;
+  --ion-color-primary: #8d4d9a;  
   --ion-color-primary-rgb: 141,77,154;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255,255,255;
   --ion-color-primary-shade: #7c4488;
-  --ion-color-primary-tint: #985fa4;  
+  --ion-color-primary-tint: #985fa4;
+  $primary: var(--ion-color-primary);
+  --radial-page: radial-gradient(farthest-corner at 0% 0%, #ffffff 75%, #{$primary} 25%);
+  --radial-card-active: radial-gradient(farthest-corner at 0% 0%, #ffffff 80%, #{$primary} 20%);
+  --radial-card-inactive: radial-gradient(farthest-corner at 0% 0%, #f4f5f8 80%, #{$primary} 20%);
 
   /** secondary **/
   --ion-color-secondary: #3dc2ff;

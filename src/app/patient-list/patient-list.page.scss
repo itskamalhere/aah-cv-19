@@ -1,3 +1,7 @@
+$primary: var(--ion-color-primary);
+$radial-card-active: var(--radial-card-active);
+$radial-card-inactive: var(--radial-card-inactive);
+
 ion-content {
   //--ion-background-color: #f4f5f8;
 }
@@ -9,7 +13,7 @@ ion-searchbar {
 }
 
 .image-css {
-  margin-right: -48px;  
+  margin-right: -48px;
   max-height: 40px;
 }
 
@@ -27,8 +31,8 @@ ion-item-divider {
 }
 
 .ion-card-active {
-  --background: radial-gradient(farthest-corner at 0% 0%, #ffffff 80%, #8d4d9a 20%);
-  border-color: #8d4d9a;
+  --background: #{$radial-card-active};
+  border-color: #{$primary};
   border-style: solid;
   border-width: thin;
   border-radius: 25px;
@@ -36,8 +40,8 @@ ion-item-divider {
 }
 
 .ion-card-inactive {
-  --background: radial-gradient(farthest-corner at 0% 0%, #f4f5f8 80%, #8d4d9a 20%);  
-  border-color: #8d4d9a;
+  --background: #{$radial-card-inactive};
+  border-color: #{$primary};
   border-style: solid;
   border-width: thin;
   border-radius: 25px;

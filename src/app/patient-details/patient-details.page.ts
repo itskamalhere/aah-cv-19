@@ -43,7 +43,9 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   toDateVal: string;
   initialized: boolean = false;
   loaded: boolean = false;
-  subscribed: boolean = false;
+  subscribed: boolean = false;  
+  chartPrimary: string;
+  chartSecondary: string;
 
   constructor(
     public session: SessionService,
@@ -52,9 +54,11 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
     private appPreferences: AppPreferences,
     private firebase: FirebaseX,
     public platform: Platform
-    ) {
+    ) {   
     this.formContext = this.session.getFormContext();
-    let sessionUser = this.session.getUser();
+    let sessionUser = this.session.getUser();    
+    this.chartPrimary = "#8d4d9a";
+    this.chartSecondary = "lightgrey";
     if(sessionUser && sessionUser.data && sessionUser.data.userType == "Patient") {
       this.formContext.user = sessionUser;
       this.session.setFormContext(this.formContext);
@@ -158,10 +162,16 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
     }
   }
 
+  getCssAttribute(attribName: string): string {    
+    //return window.getComputedStyle(document.body).getPropertyValue("--"+attribName);
+    return document.documentElement.style.getPropertyValue("--"+attribName);
+  }
+
   initializeChartConfig() {
+    const me = this;
     console.log("Initialize Chart Config");
     this.vitalsChartConfigs = [];
-    let vitalsConfig = [... (new VitalsConfig().vitalsConfigModel)];
+    let vitalsConfig = [... (new VitalsConfig().vitalsConfigModel)];    
     for (let vital of vitalsConfig) {
       let sampleChartConfig = {} as ChartConfig;
       sampleChartConfig = {
@@ -172,10 +182,10 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
         chartOptions: [],
         chartColors: [{
           borderColor: '#000000',
-          backgroundColor: '#8d4d9a'
+          backgroundColor: this.chartPrimary
         },{
           borderColor: '#000000',
-          backgroundColor: 'lightgrey'
+          backgroundColor: this.chartSecondary
         }
       ],
         showLegend: true
