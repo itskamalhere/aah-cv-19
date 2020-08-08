@@ -19,6 +19,7 @@ import { AppPreferences } from "@ionic-native/app-preferences/ngx";
 import { FirebaseX } from "@ionic-native/firebase-x/ngx";
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { ValidationService } from '../services/validation.service';
+import { LoadingController } from '@ionic/angular';
 
 
 @Component({
@@ -68,39 +69,38 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     private storage: StorageMap,
     private auth: AngularFireAuth,
     private firebase: FirebaseX,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private loadingController: LoadingController
     ) {}
 
   ngOnInit() {
 
     this.initForm();
-    
-    this.databaseSub =  this.databaseSubject.subscribe((status) => {
-      if (status == DATABASE_VERIFICATION.PENDING) {
-        this.statusHeader = "Register using mobile number";
-        this.statusLabel = "";
-        this.viewTemplate = this.registerTemplate;
-      } else if (status == DATABASE_VERIFICATION.SUCCESS) {        
-        this.statusLabel = "database verification success";
-        this.viewTemplate = this.statusTemplate;
-        this.otpSubject.next(OTP_VERIFICATION.PENDING);
-        //this.passcodeSubject.next(PASSCODE_SETTING.PENDING);
-      } else if (status == DATABASE_VERIFICATION.FAILED) {
-        this.statusHeader = "Registration Failed";
-        this.statusLabel = "No record available for the entered number\nPlease contact hospital for more information";
-      }
-    });
 
     this.otpSub = this.otpSubject.subscribe((status) => {
       if (status == OTP_VERIFICATION.PENDING) {
-        this.statusLabel = "sending OTP to mobile";
-        this.sendOTP();        
+        this.statusHeader = "Register using mobile number";
+        this.statusLabel = "";
+        this.viewTemplate = this.registerTemplate;
       } else if (status == OTP_VERIFICATION.SUCCESS) {
         this.statusLabel = "OTP verification success";
         this.viewTemplate = this.statusTemplate;
-        this.updateUserDetails();             
+        this.databaseSubject.next(DATABASE_VERIFICATION.PENDING);
       } else if (status == OTP_VERIFICATION.FAILED) {
-        this.statusHeader = "OTP Verification Failed";        
+        this.statusHeader = "OTP Verification Failed";
+      }
+    });
+    
+    this.databaseSub =  this.databaseSubject.subscribe((status) => {
+      if (status == DATABASE_VERIFICATION.PENDING) {
+        this.verifyMobileNoinDB();
+      } else if (status == DATABASE_VERIFICATION.SUCCESS) {
+        this.statusLabel = "database verification success";
+        this.viewTemplate = this.statusTemplate;
+        this.updateUserDetails();
+      } else if (status == DATABASE_VERIFICATION.FAILED) {
+        this.statusHeader = "Registration Failed";
+        this.statusLabel = "No record available for the entered number\nPlease contact hospital for more information";
       }
     });
 
@@ -133,10 +133,9 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     });   
   }
 
-  verifyMobileNoinDB(mobileNo: string) {
-    this.mobileNumber = mobileNo;
+  async verifyMobileNoinDB() {    
     const me = this;
-    this.firebaseService.fetchUsersbyField("mobileNumber",this.mobileNumber,"==").then((users) => {      
+    this.firebaseService.fetchUsersbyField("mobileNumber",this.mobileNumber,"==").then((users) => {
       if(users && users.length > 0) {
         let user = {} as User;
         user.id = [...users][0].id;
@@ -161,12 +160,16 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  sendOTP() {
-    const me = this;    
-    if(this.session.isHybrid()) {      
+  async sendOTP(mobileNo: string) {
+    const me = this;
+    await this.presentLoading("Sending OTP...");
+    this.mobileNumber = mobileNo;
+    this.statusLabel = "sending OTP to mobile";
+    if(this.session.isHybrid()) {
       var timeOutDuration = 60;
       this.firebase.verifyPhoneNumber("+91"+this.mobileNumber,timeOutDuration).then((credential) => {
         console.log("OTP sent");
+        this.loadingController.dismiss();
         me.fsCredential = credential;
         if(credential.instantVerification){
           me.signInWithOTP("");
@@ -177,21 +180,22 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
         }
       }, (err) => {
         console.log("OTP error: "+err);
+        this.loadingController.dismiss();
         me.statusLabel = err;
         me.otpSubject.next(OTP_VERIFICATION.FAILED);
       });
     } else {
       this.auth.signInWithPhoneNumber("+91"+this.mobileNumber, this.recaptchaVerifier)
-      .then((credential) => {
-        // SMS sent. Prompt user to type the code from the message, then sign the
-        // user in with confirmationResult.confirm(code).        
+      .then((credential) => {       
         console.log("OTP sent");
+        this.loadingController.dismiss();
         me.fsCredential = credential;
         me.viewTemplate = me.otpTemplate;
         me.statusHeader = "Enter OTP";
         me.statusLabel = "awaiting OTP submission";
       }).catch((err) => {
         console.log("OTP error: "+err);
+        this.loadingController.dismiss();
         me.statusLabel = err;
         me.otpSubject.next(OTP_VERIFICATION.FAILED);
       });
@@ -199,29 +203,36 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  signInWithOTP(otp: string) {
+  async signInWithOTP(otp: string) {
     console.log(otp);
     const me = this;
+    await this.presentLoading("Verifying OTP...");
     if(otp && otp.length > 0 && this.session.isHybrid()){
       this.fsCredential.code = otp;
     }
     if(this.session.isHybrid()) {
       this.firebase.signInWithCredential(this.fsCredential).then(() => {
         console.log("OTP user verified");
-        this.otpSubject.next(OTP_VERIFICATION.SUCCESS);
+        this.auth.signInAnonymously().then(() => {
+          this.loadingController.dismiss();
+          this.otpSubject.next(OTP_VERIFICATION.SUCCESS);
+        });
       }, (err) => {
         console.log("OTP user verification error: " + err);
+        this.loadingController.dismiss();
         me.statusLabel = err;
-        this.otpSubject.next(OTP_VERIFICATION.FAILED);      
+        this.otpSubject.next(OTP_VERIFICATION.FAILED);
       });
     } else {
       me.fsCredential.confirm(otp).then(() => {
         console.log("OTP user verified");
+        this.loadingController.dismiss();
         this.otpSubject.next(OTP_VERIFICATION.SUCCESS);
       }, (err) => {
         console.log("OTP user verification error: " + err);
+        this.loadingController.dismiss();
         me.statusLabel = err;
-        this.otpSubject.next(OTP_VERIFICATION.FAILED);      
+        this.otpSubject.next(OTP_VERIFICATION.FAILED);
       });
     }
   }
@@ -269,6 +280,13 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     me.session.setPassCode(me.confirmCode);
   }
 
+  async presentLoading(message: string) {
+    let loading = await this.loadingController.create({
+      message: message
+    });
+    await loading.present();
+  }
+
   login() {
     this.session.registrationSubject.next(REGISTRATION.COMPLETED);
   }
@@ -307,9 +325,8 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngAfterViewInit() {
-    this.databaseSubject.next(DATABASE_VERIFICATION.PENDING);
-    //this.passcodeSubject.next(PASSCODE_SETTING.PENDING);
+  ngAfterViewInit() {    
+    this.otpSubject.next(OTP_VERIFICATION.PENDING);
     if(!this.session.isHybrid()) {
       this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier("recaptcha-container", {
         "size": "invisible"

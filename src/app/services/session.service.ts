@@ -1,12 +1,13 @@
 import { OnInit, OnDestroy, Injectable } from '@angular/core';
 import { User } from '../model/user-model';
 import { BehaviorSubject } from 'rxjs';
-import { Platform } from "@ionic/angular";
+import { Platform, ToastController } from "@ionic/angular";
 import { Device } from '@capacitor/core';
 import { Router, CanActivate, ActivatedRouteSnapshot } from "@angular/router";
 import {Plugins, HapticsImpactStyle } from '@capacitor/core';
 import { FirebaseX } from "@ionic-native/firebase-x/ngx";
 import { FirebaseService } from './firebase.service';
+import { SwUpdate } from "@angular/service-worker";
 
 const { Haptics } = Plugins;
 
@@ -28,7 +29,9 @@ export class SessionService implements OnInit, OnDestroy, CanActivate {
     private platform: Platform,
     private firebase: FirebaseX,
     private firebaseService: FirebaseService,
-    private router: Router
+    private router: Router,
+    private readonly updates: SwUpdate,
+    private toastController: ToastController
     ) {
       if(this.platform.is("hybrid")) {
         this.hybrid = true;
@@ -43,11 +46,34 @@ export class SessionService implements OnInit, OnDestroy, CanActivate {
               me.gcmToken = token;
             });
           },2000)
+        } else {
+          this.updates.available.subscribe(event => {
+            this.showUpdateAlert();
+          });
         }
       });
     }
 
   ngOnInit() {}
+
+  async showUpdateAlert() {
+    const toast = await this.toastController.create({
+      header: 'New Version Available',      
+      position: 'bottom',
+      buttons: [
+        {
+          text: 'Update',
+          role: 'cancel',
+          handler: () => {
+            this.updates.activateUpdate().then(() => {
+              document.location.reload();
+            });
+          }
+        }
+      ]
+    });
+    toast.present();
+  }
 
   ngOnDestroy() {
     if(this.hybrid) {

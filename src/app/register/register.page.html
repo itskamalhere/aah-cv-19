@@ -23,7 +23,7 @@
     <p><ion-input placeholder="Enter 10 digit mobile number" autofocus="true"
     type="tel" #mobileNumber formControlName="mobileNumber"></ion-input></p>
     <control-messages [control]="mobileForm.get('mobileNumber')"></control-messages>
-    <p><ion-button shape="round" (click) = "verifyMobileNoinDB(mobileNumber.value.toString())" [disabled]="mobileForm.invalid">Register</ion-button></p>
+    <p><ion-button shape="round" (click) = "sendOTP(mobileNumber.value.toString())" [disabled]="mobileForm.invalid">Register</ion-button></p>
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
     </ion-text>    

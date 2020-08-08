@@ -34,7 +34,9 @@
   
           <ion-select *ngIf="attribute.attrType == 'select'" placeholder="Select One"
           id="{{attribute.attrName}}"
-          interface="action-sheet" formControlName="{{attribute.attrName}}">
+          [multiple]="attribute.attrSelection == 'single'?'false':'true'"
+          [interface]="attribute.attrSelection == 'single'?'action-sheet':'alert'"          
+          formControlName="{{attribute.attrName}}">
             <ion-select-option *ngFor="let option of attribute.attrOptions" value="{{option}}">
               {{option}}
             </ion-select-option>
@@ -58,8 +60,8 @@
           <ion-select *ngIf="attribute.attrType == 'lookup'"
             id="{{attribute.attrName}}"
             [multiple]="attribute.attrSelection == 'single'?'false':'true'"
-            placeholder="Choose" [interfaceOptions]="selectAlertOptions"
             [interface]="attribute.attrSelection == 'single'?'action-sheet':'alert'"
+            placeholder="Choose" [interfaceOptions]="selectAlertOptions"            
             formControlName="{{attribute.attrName}}" id="{{attribute.attrName}}">
            <ion-select-option *ngFor="let option of attribute.attrOptions | async" [value]="option.value">
              {{option.label}}

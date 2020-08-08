@@ -31,8 +31,10 @@
             </ion-label>
 
             <ion-select *ngIf="attribute.attrType == 'select'" placeholder="Select One"
-            id="{{attribute.attrName}}" 
-            interface="action-sheet" formControlName="{{attribute.attrName}}">
+            id="{{attribute.attrName}}"
+            [multiple]="attribute.attrSelection == 'single'?'false':'true'"
+            [interface]="attribute.attrSelection == 'single'?'action-sheet':'alert'"
+            formControlName="{{attribute.attrName}}">
               <ion-select-option *ngFor="let option of attribute.attrOptions" value="{{option}}">
                 {{option}}
               </ion-select-option>

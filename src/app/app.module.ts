@@ -31,7 +31,7 @@ import { ServiceWorkerModule } from '@angular/service-worker';
       scrollAssist: false
     }),
     AppRoutingModule,
-    AngularFireModule.initializeApp(environment.firebaseConfig),
+    AngularFireModule.initializeApp(environment.firebaseConfigDev),
     AngularFirestoreModule,
     //AngularFirestoreModule.enablePersistence(),
     AngularFireStorageModule,

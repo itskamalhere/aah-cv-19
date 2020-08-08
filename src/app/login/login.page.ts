@@ -236,11 +236,14 @@ export class LoginPage implements OnInit, OnDestroy, AfterViewInit {
 
   async forgotCode() {
     if(this.session.isHybrid()) {
-      this.appPreferences.remove("app-data");
+      this.appPreferences.remove("app-data").then((res) => {
+        this.session.registrationSubject.next(REGISTRATION.NOT_COMPLETED);
+      })
     } else {
-      this.storage.delete("app-data");
-    }
-    this.session.registrationSubject.next(REGISTRATION.NOT_COMPLETED);
+      this.storage.delete("app-data").subscribe(() => {
+        this.session.registrationSubject.next(REGISTRATION.NOT_COMPLETED);
+      });
+    }    
   }
 
   ngAfterViewInit() {

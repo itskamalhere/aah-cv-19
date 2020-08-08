@@ -21,17 +21,17 @@
     <ion-toolbar *ngIf="!searchOpen && formContext.userType=='Patient'">
       <ion-segment [(ngModel)]="segment" (ionChange)="segmentChanged($event)" [@slideUp]>
         <ion-segment-button value="assigned">
-            <ion-label>Assigned</ion-label>
+            <ion-label>Assigned{{loaded&&segment=="assigned"?" ("+users.length+")":""}}</ion-label>
         </ion-segment-button>
         <ion-segment-button value="all">
-            <ion-label>All</ion-label>
+            <ion-label>All{{loaded&&segment=="all"?" ("+users.length+")":""}}</ion-label>
         </ion-segment-button>
       </ion-segment>
     </ion-toolbar>
   </ng-container>
   <ion-item-divider *hasPermissions="['can-view-all-users'];contains:false">
     <ion-label color="primary">    
-      {{ segment.toUpperCase() }}
+      {{segment.toUpperCase()}}{{loaded&&segment=="assigned"?" ("+users.length+")":""}}
     </ion-label>
   </ion-item-divider>
   
