@@ -1,34 +1,42 @@
 {
   "project_info": {
-    "project_number": "127680092804",
-    "firebase_url": "https://aah-app-7ad54.firebaseio.com",
-    "project_id": "aah-app-7ad54",
-    "storage_bucket": "aah-app-7ad54.appspot.com"
+    "project_number": "851335920268",
+    "firebase_url": "https://aah-cv-19.firebaseio.com",
+    "project_id": "aah-cv-19",
+    "storage_bucket": "aah-cv-19.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:127680092804:android:6e66b4c7d21f9aecb0c0d1",
+        "mobilesdk_app_id": "1:851335920268:android:00eb3779d1fa172f2bd9a9",
         "android_client_info": {
-          "package_name": "com.aah.app"
+          "package_name": "com.aah.cv19"
         }
       },
       "oauth_client": [
         {
-          "client_id": "127680092804-6r67e9jj6hq2rjao9l3iqag6re16e4l1.apps.googleusercontent.com",
+          "client_id": "851335920268-erm7nbpaiv6c8ar7cki5hp3nlslj3ib2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aah.cv19",
+            "certificate_hash": "1ae18368ac73296a2a835b7dfb57652ea5c27db5"
+          }
+        },
+        {
+          "client_id": "851335920268-h5sn0nppe6jikot895r3g2bf863kb3sh.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA4HISYvjgB8z-aI-Xrhc1_6ZHNqit-aTA"
+          "current_key": "AIzaSyC71oYXLWPHJkPLKntrNq7qCd0BKGZYcBc"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "127680092804-6r67e9jj6hq2rjao9l3iqag6re16e4l1.apps.googleusercontent.com",
+              "client_id": "851335920268-h5sn0nppe6jikot895r3g2bf863kb3sh.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
