@@ -20,7 +20,7 @@ export class DateFormatPipe implements PipeTransform {
 
 export class TimeFormatPipe implements PipeTransform {
   transform(value: any, ...args: any[]): any {    
-    return moment(value).format("DD MMM YYYY hh:mm:ss a").toLocaleString();
+    return moment(value).format("DD MMM YYYY hh:mm a").toLocaleString();
   }
 }
 

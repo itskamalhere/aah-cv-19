@@ -5,7 +5,6 @@ import { FirebaseService } from '../services/firebase.service';
 import { FormModel, Vital } from '../model/user-model';
 import { SessionService, FormContext } from '../services/session.service';
 import { AngularFireFunctions } from '@angular/fire/functions';
-import * as moment from 'moment';
 import { first } from 'rxjs/operators';
 
 @Component({
@@ -28,7 +27,6 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
     private modalController: ModalController,
     private toastController: ToastController,
     private firebaseService: FirebaseService,
-    private model: FormModel,
     private session: SessionService,
     private functions: AngularFireFunctions
   ) {
@@ -47,7 +45,7 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
   }
 
   initForm() {
-    this.formModel = this.model.VitalModel;
+    this.formModel = new FormModel().VitalModel;
     let formControl = {};
     for (let entry of this.formModel) {
       formControl[entry.attrName] = entry.control;
@@ -71,7 +69,7 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
       return invalidBp;
     } else {
       Object.keys(form).forEach((key) =>{
-        if(key != "note") {
+        if(key != "note" && key != "submittedDate") {
           formValues = formValues + form[key];
         }        
       });
@@ -103,8 +101,7 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
     });
     const data = this.session.getUser().data;
     const name = data.firstName + " " + data.lastName;
-    vital.submittedBy = name;
-    vital.submittedDate = moment().toString();
+    vital.submittedBy = name;       
     return vital;
   }
 
@@ -124,14 +121,14 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
 
   }
 
-  notifyUsers() {
+  async notifyUsers() {
     var id = this.formContext.user.id;
     var uhid = this.formContext.user.data.uhid;
     var firstName = this.formContext.user.data.firstName;
     var lastName = this.formContext.user.data.lastName;
     var fullName = firstName+" "+lastName;
-    this.functions.httpsCallable("vitalAdded")(
-      {id:id,uhid:uhid,fullName:fullName}).pipe(first())
+    this.functions.httpsCallable("entryAdded")(
+      {id:id,uhid:uhid,fullName:fullName,entryName:"Vital"}).pipe(first())
     .subscribe(resp => {
       console.log({ resp });
       this.dismissLoading();
@@ -143,7 +140,7 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
 
   async presentLoading() {
     let loading = await this.loadingController.create({
-      message: 'Saving...'
+      message: "Saving..."
     });
     await loading.present();
   }
@@ -152,7 +149,7 @@ export class ManageVitalsPage implements OnInit, AfterViewInit {
     this.loadingController.dismiss();
     this.presentToast("Vitals added successfully");
     this.vitalForm.reset(this.initValues);
-    this.modalController.dismiss();    
+    this.modalController.dismiss();
   }
 
   async presentToast(message: string) {

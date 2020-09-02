@@ -1,0 +1,62 @@
+:host {
+  background-color: #000000;
+}
+
+ion-toolbar {
+  --background: rgba(0,0,0,0.5);
+}
+
+ion-content {
+  --ion-background-color: #000000;
+  --overflow: hidden;
+  transition: all 1s ease !important;
+}
+
+ion-footer {
+  background-color: rgba(0,0,0,0.5);
+  color: #ffffff;
+}
+
+.full-height {
+  height: 100% !important;
+}
+
+.full-height-width {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.fab-css {  
+  padding-bottom: 10px;
+}
+
+.icon-css {
+  color: #ffffff;  
+}
+
+.row-css {
+  background-color: rgba(255,255,255,0.2);
+}
+
+ion-textarea {
+  background: transparent;
+  margin: 0px;
+  align-self: center !important;
+  max-height: 100px;
+}
+
+.footer-grid-css {
+  padding: 0px 0px 0px 0px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
+.cropper-wrapper {
+  transition: all 0.5s ease !important;
+}

@@ -1,20 +1,25 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Location } from '@angular/common';
 import { TimeScale } from 'chart.js';
-import { ModalController, Platform } from '@ionic/angular';
+import { ModalController, Platform, AlertController, LoadingController, IonContent, ToastController } from '@ionic/angular';
 import { ManageVitalsPage } from '../manage-vitals/manage-vitals.page';
 import { ChartConfig, VitalsConfig, DAY_TIMESCALE, WEEK_TIMESCALE, MONTH_TIMESCALE, YEAR_TIMESCALE } from './chart-interface';
 import * as moment from 'moment';
 import { FormContext, SessionService, MODAL_ACTION, FORM_MODAL, FORM_ACTION } from '../services/session.service';
 import { Subscription } from 'rxjs';
-import { Vital, User, UserData } from '../model/user-model';
+import { Vital, User, UserData, ConvData, Conv } from '../model/user-model';
 import { FirebaseService } from '../services/firebase.service';
 import { UserManagePage } from '../user-manage/user-manage.page';
 import * as Chart from 'chart.js';
 import { AppPreferences } from '@ionic-native/app-preferences/ngx';
 import { FirebaseX } from '@ionic-native/firebase-x/ngx';
-import { Plugins } from '@capacitor/core';
-const { App } = Plugins;
+import { Plugins, StatusBarStyle, CameraResultType, CameraSource } from '@capacitor/core';
+import { ManageImagePage } from '../manage-image/manage-image.page';
+import { first } from 'rxjs/operators';
+import { AngularFireFunctions } from '@angular/fire/functions';
+import { Color } from 'ng2-charts';
 
+const { App,Camera,StatusBar } = Plugins;
 
 @Component({
   selector: 'app-patient-details',
@@ -22,11 +27,19 @@ const { App } = Plugins;
   styleUrls: ['./patient-details.page.scss']
 })
 
-export class PatientDetailsPage implements OnInit, OnDestroy {
+export class PatientDetailsPage implements OnInit, OnDestroy {  
+  multiDataChartColors: Color[];
+  sessionUser: User;
+  sessionUserName: string;
+  overlay: any;  
+  convMessage: string = "";
+  source = CameraSource;
   formContext: FormContext;
   user: User;
   userData: UserData;
+  convData: ConvData;
   userSub: Subscription;
+  discussionSub: Subscription;
   segment = "details";
   displayBy = "day";  
   vitalsStartDate: string;
@@ -43,30 +56,54 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   toDateVal: string;
   initialized: boolean = false;
   loaded: boolean = false;
-  subscribed: boolean = false;  
+  convLoaded: boolean = false;
+  discussionAdded: boolean = false;
+  subscribed: boolean = false;
   chartPrimary: string;
   chartSecondary: string;
+  potraightInitHeight: number;
+  landscapeInitHeight: number;
+  potraightHeight: number;
+  landscapeHeight: number;
+  @ViewChild(IonContent) private content: IonContent;
 
   constructor(
     public session: SessionService,
     private firebaseService: FirebaseService,
-    private modalController: ModalController,
+    public modalController: ModalController,
     private appPreferences: AppPreferences,
     private firebase: FirebaseX,
-    public platform: Platform
-    ) {   
-    this.formContext = this.session.getFormContext();
-    let sessionUser = this.session.getUser();    
+    public platform: Platform,
+    private alertController: AlertController,
+    private location: Location,
+    private loadingController: LoadingController,
+    private toastController: ToastController,    
+    private functions: AngularFireFunctions
+    ) {
     this.chartPrimary = "#8d4d9a";
-    this.chartSecondary = "lightgrey";
-    if(sessionUser && sessionUser.data && sessionUser.data.userType == "Patient") {
-      this.formContext.user = sessionUser;
+    this.chartSecondary = "rgba(141, 77, 154, 0.5)";
+    this.multiDataChartColors = [
+      {
+        borderColor: '#000000',
+        backgroundColor: this.chartSecondary,
+        hoverBackgroundColor: "white"
+      },
+      {
+        borderColor: '#000000',
+        backgroundColor: this.chartPrimary,
+        hoverBackgroundColor: "white"
+      }];
+    this.formContext = this.session.getFormContext();
+    this.sessionUser = this.session.getUser();
+    this.sessionUserName = this.sessionUser.data.firstName + " " + this.sessionUser.data.lastName;
+    if(this.sessionUser && this.sessionUser.data && this.sessionUser.data.userType == "Patient") {
+      this.formContext.user = this.sessionUser;
       this.session.setFormContext(this.formContext);
       if(this.session.isHybrid() && !this.subscribed) {
         let topics = [];
-        let role = sessionUser.data.role.path.toString();
+        let role = this.sessionUser.data.role.path.toString();
         role = role.substring(role.lastIndexOf("/")+1);
-        let userType = sessionUser.data.userType;
+        let userType = this.sessionUser.data.userType;
         topics.push(role);
         topics.push(userType);
         this.subscribeTopics(topics);
@@ -76,6 +113,7 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
     Chart.defaults.global.defaultFontColor = 'black';
     this.user = {} as User;
     this.userData = {} as UserData;
+    this.convData = {} as ConvData;
     this.userSub = this.firebaseService.fetchUserbyId$(this.formContext.user.id).subscribe(user => {
       let formContext = this.formContext;
       formContext.user = user;
@@ -102,12 +140,199 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    let sessionUser = this.session.getUser();
-    if(sessionUser && sessionUser.data && sessionUser.data.userType == "Patient") {
+    if(this.sessionUser && this.sessionUser.data && this.sessionUser.data.userType == "Patient") {
       this.platform.backButton.subscribeWithPriority(-1, () => {
         App.exitApp();
       });
     }
+    if(this.platform.isPortrait) {
+      this.potraightInitHeight = this.platform.height();
+      this.landscapeInitHeight = this.platform.width();
+      this.potraightHeight = this.potraightInitHeight;
+      this.landscapeHeight = this.landscapeInitHeight;
+    } else if(this.platform.isLandscape) {
+      this.potraightInitHeight = this.platform.width();
+      this.landscapeInitHeight = this.platform.height();
+      this.potraightHeight = this.potraightInitHeight;
+      this.landscapeHeight = this.landscapeInitHeight;
+    }
+    this.platform.resize.subscribe(() => {
+      if(this.platform.isPortrait()) {
+        this.potraightHeight = this.potraightInitHeight;
+        this.landscapeHeight = this.landscapeInitHeight;
+      } else if(this.platform.isLandscape()) {
+        this.potraightHeight = this.landscapeInitHeight;
+        this.landscapeHeight = this.potraightInitHeight;
+      }
+    });
+  }
+
+  segmentChanged(ev: any) {
+    const segment = ev.detail.value;
+    if(this.convLoaded && segment == "discussions") {
+      setTimeout(() => this.content.scrollToBottom(), 100);
+    } else {
+      setTimeout(() => this.content.scrollToTop(), 100);
+    }
+    if(segment == "discussions" && !this.convLoaded) {
+      this.discussionSub = this.firebaseService.fetchConversations(this.formContext.user.id).subscribe(conversation => {
+        if(conversation && conversation.data) {
+          let conversations = conversation.data.conversations.filter(a => a.convType == "discussion");
+          this.convData.conversations = conversations;
+        }
+        if((segment == "discussions") && ((!this.convLoaded && !this.discussionAdded) || this.discussionAdded)) {
+          this.discussionAdded = false;
+          setTimeout(() => this.content.scrollToBottom(), 100);
+        } else if(this.sessionUser.data.userType == "Staff") {
+          const length = this.convData.conversations.length-1;
+          const lastMessageCreator = this.convData.conversations[length].creatorName;
+          if(this.sessionUserName != lastMessageCreator) {
+            this.showNewDiscussion();
+          }
+        }
+        this.convLoaded = true;
+      });
+    }
+  }
+
+  async showNewDiscussion() {
+    if(this.overlay) {
+      this.overlay.dismiss();
+    }
+    this.overlay = await this.toastController.create({
+      header: 'New discussion added',
+      position: "bottom",
+      animated: true,
+      color: "primary",
+      duration: 3000,
+      buttons: [
+        {
+          icon: this.segment=="discussions"?"arrow-down":"",
+          role: "cancel",
+          handler: () => {
+            if(this.segment=="discussions") {
+              setTimeout(() => this.content.scrollToBottom(), 100);
+            }            
+          }
+        }
+      ]
+    });
+    this.overlay.present();
+  }
+
+  async addImage(source: CameraSource) {    
+    try{
+      const me = this;
+      let image = await Camera.getPhoto({
+        quality: 70,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        webUseInput: true,
+        source
+      });
+
+      if(!me.session.isModalCalled()) {
+        me.session.setModalCalled(true);
+        await me.openImageModal(image.dataUrl,"upload");
+      }
+    } catch(error) {
+      console.log(error);
+    }
+  }
+
+  openImage(attachmentUrl: string) {
+    this.openImageModal(attachmentUrl,"view");
+  }
+
+  async openImageModal(imageUrl: any, action: string) {
+    let modal = await this.modalController.create({
+      id: new Date().getTime().toString(),
+      component: ManageImagePage,
+      animated: action=="view"?true:false,
+      componentProps: {
+        action: action,
+        //convData: this.convData,
+        image: imageUrl,        
+        userId: this.formContext.user.id,
+        potraightHeight: this.potraightHeight,
+        landscapeHeight: this.landscapeHeight
+      }
+    });
+    await modal.present();
+    await modal.onDidDismiss().then(args=>{
+      if(this.session.isHybrid()) {
+      // StatusBar.setOverlaysWebView({
+      //   overlay: false
+      // });
+      StatusBar.setBackgroundColor({ color: "#ffffff" });
+      // StatusBar.setStyle({ style: StatusBarStyle.Light });
+      // StatusBar.show();
+      }
+      this.session.setModalCalled(false);
+      if(args && args.data){
+        const saved: boolean = args.data.saved;
+        if(saved && this.segment == "discussions") {
+          this.discussionAdded = true;
+          setTimeout(() => this.content.scrollToBottom(), 100);
+          this.notifyUsers();
+        }
+      }
+    });
+  }
+
+  async notifyUsers() {
+    var id = this.formContext.user.id;
+    var uhid = this.formContext.user.data.uhid;
+    var firstName = this.formContext.user.data.firstName;
+    var lastName = this.formContext.user.data.lastName;
+    var fullName = firstName+" "+lastName;
+    this.functions.httpsCallable("entryAdded")(
+      {id:id,uhid:uhid,fullName:fullName,entryName:"Discussion"}).pipe(first())
+    .subscribe(resp => {
+      console.log({ resp });      
+    }, err => {
+      console.error({ err });      
+    });
+  }
+
+  canPreview(conv: Conv): boolean {    
+    let canPreview = false;
+    if(conv.attachmentUrl && conv.attachmentContentType) {
+      if(conv.attachmentContentType.indexOf("image/png") > -1) {
+        canPreview = true;
+      } else if(conv.attachmentContentType.indexOf("image/bmp") > -1) {
+        canPreview = true;
+      } else if(conv.attachmentContentType.indexOf("image/jpg") > -1) {
+        canPreview = true;
+      } else if(conv.attachmentContentType.indexOf("image/jpeg") > -1) {
+        canPreview = true;        
+      } else if(conv.attachmentContentType.indexOf("image/gif") > -1) {
+        canPreview = true;        
+      } else if(conv.attachmentContentType.indexOf("image/svg") > -1) {
+        canPreview = true;        
+      }
+    }
+    return canPreview;
+  }
+
+  addDiscussion() {
+    this.discussionAdded = true;
+    let conversation = {} as Conv;
+    const timeStamp = moment().toISOString();
+    const creator = this.sessionUser;    
+    if(this.convMessage && this.convMessage.trim().length > 0) {
+      conversation.message = this.convMessage;
+    }
+    conversation.convType = "discussion";
+    conversation.creationDate = timeStamp;
+    conversation.modifyDate = timeStamp;
+    conversation.creatorId = creator.id;
+    conversation.creatorName = this.sessionUserName;
+    conversation.creatorType = creator.data.userType;
+    this.firebaseService.addConversation(this.formContext.user.id,conversation).then(() => {
+      this.convMessage = "";      
+      this.notifyUsers();
+    });
   }
 
   async subscribeTopics(newTopics: string[]) {
@@ -146,17 +371,62 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
     });
   }
 
-  async EditUser() {
+  async editUser() {
     let formContext = this.formContext;
     formContext.action = FORM_ACTION.EDIT;
     this.session.setFormContext(formContext);
     let modal = await this.modalController.create({
       component: UserManagePage
     });
-    return await modal.present();    
+    return await modal.present();
+  }
+
+  async deleteUser() {
+    let alertCtrl = await this.alertController.create({
+      header: "Delete record. Are you sure?",
+      message: "This will permanently delete the record and any vitals/other related information",
+      backdropDismiss: true,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary'          
+        }, {
+          text: 'Ok',
+          handler: async () => {
+            await this.presentLoading("Deleting...");
+            if(this.discussionSub) {
+              this.discussionSub.unsubscribe();
+            }
+            if(this.userSub) {
+              this.userSub.unsubscribe();
+              this.firebaseService.deleteUser(this.formContext.user.id).then(() => {
+                this.loadingController.dismiss();
+                this.location.back();
+              },function(err) {
+                console.log("error: " + err);
+                this.loadingController.dismiss();
+                alert(err);
+              });
+            }
+          }
+        }
+      ]
+    });
+    await alertCtrl.present();
+  }
+
+  async presentLoading(message: string) {
+    let loading = await this.loadingController.create({
+      message: message
+    });
+    await loading.present();
   }
 
   ngOnDestroy() {
+    if(this.discussionSub) {
+      this.discussionSub.unsubscribe();
+    }
     if(this.userSub) {
       this.userSub.unsubscribe();
     }
@@ -182,10 +452,8 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
         chartOptions: [],
         chartColors: [{
           borderColor: '#000000',
-          backgroundColor: this.chartPrimary
-        },{
-          borderColor: '#000000',
-          backgroundColor: this.chartSecondary
+          backgroundColor: this.chartPrimary,
+          hoverBackgroundColor: "white"
         }
       ],
         showLegend: true
@@ -193,15 +461,16 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
       sampleChartConfig.id = vital.id;
       let idVals = vital.id;
       if (idVals.includes("|")) {
+        sampleChartConfig.chartColors = this.multiDataChartColors;
         let idValArr = idVals.split("|");
         let indexPos = 0;
         let labelVals = vital.label.split("|");
         for (let idVal of idValArr) {
-          sampleChartConfig.chartData[indexPos] = { data: [], label: labelVals[indexPos], borderWidth: 1, pointHitRadius: 25 }
+          sampleChartConfig.chartData[indexPos] = { data: [], label: labelVals[indexPos], borderWidth: 1, pointHitRadius: 15 }
           indexPos++;
         }
       } else {
-        sampleChartConfig.chartData = [{ data: [], label: vital.label, borderWidth: 1, pointHitRadius: 25 }];
+        sampleChartConfig.chartData = [{ data: [], label: vital.label, borderWidth: 1, pointHitRadius: 15 }];
       }
       sampleChartConfig.chartOptions = vital.chartOptions;
       sampleChartConfig.chartOptions.scales.xAxes[0].time = this.getTimeType();
@@ -256,15 +525,16 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
   }
 
   setChartData(initialize: boolean) {
-    if(initialize) {
+    if (initialize) {
       this.initializeChartConfig();
-    }    
-    let vitalsOnSelectedDate = this.getVitalsData();    
-    if(this.vitalsChartConfigs) {
+    }
+    let vitalsOnSelectedDate = this.getVitalsData();
+    if (this.vitalsChartConfigs) {
       for (let chartConfig of this.vitalsChartConfigs) {
         let idVals = chartConfig.id;
         chartConfig.chartLabels = [this.fromDateVal.toString(), this.toDateVal.toString()];
         if (idVals.includes("|")) {
+          let dataSetValues: number[] = [];
           let idValArr = idVals.split("|");
           let indexPos = 0;
           for (let idVal of idValArr) {
@@ -276,22 +546,45 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
             let indexPos = 0;
             for (let idVal of idValArr) {
               if (vitalOnSelectedDate[idVal] != undefined && vitalOnSelectedDate[idVal] != "" && vitalOnSelectedDate[idVal] != 0) {
+                dataSetValues.push(vitalOnSelectedDate[idVal]);
                 chartConfig.chartData[indexPos].data.push(vitalOnSelectedDate[idVal]);
-              }                
+              }
               indexPos++;
             }
           }
+          let chartIndex = 0;
+          for (let idVal of idValArr) {
+            this.updateMaxLimitInChart(dataSetValues, chartConfig, chartIndex);
+            chartIndex++;
+          }
         } else {
           chartConfig.chartData[0].data = [null, null];
+          let dataSetValues: number[] = [];
           for (let vitalOnSelectedDate of vitalsOnSelectedDate) {
             if (vitalOnSelectedDate[chartConfig.id] != undefined &&
-               vitalOnSelectedDate[chartConfig.id] != "" && vitalOnSelectedDate[chartConfig.id] != 0) {
+              vitalOnSelectedDate[chartConfig.id] != "" && vitalOnSelectedDate[chartConfig.id] != 0) {
+              dataSetValues.push(vitalOnSelectedDate[chartConfig.id]);
               chartConfig.chartLabels.push(vitalOnSelectedDate.submittedDate.toString());
               chartConfig.chartData[0].data.push(vitalOnSelectedDate[chartConfig.id]);
             }
           }
+          this.updateMaxLimitInChart(dataSetValues, chartConfig, 0);
         }
       }
+    }
+  }
+
+  updateMaxLimitInChart(dataSetValues: number[], chartConfig: ChartConfig, index: number) {
+    if (dataSetValues.length > 0) {
+      let actualMinVal = chartConfig.chartOptions.scales.yAxes[index].ticks.min;
+      let actualMaxVal = chartConfig.chartOptions.scales.yAxes[index].ticks.max;
+      let actualStepSizeVal = chartConfig.chartOptions.scales.yAxes[index].ticks.stepSize;
+      let maxValueInDataSet = Math.max(...dataSetValues);
+      let modMaxVal = maxValueInDataSet + (0.25 * actualStepSizeVal);
+      let modStepSize = Math.ceil(((modMaxVal - actualMinVal) / 4) / actualStepSizeVal) * actualStepSizeVal;
+      chartConfig.chartOptions.scales.yAxes[index].ticks.max = Math.ceil(modMaxVal / actualStepSizeVal) * actualStepSizeVal;
+      chartConfig.chartOptions.scales.yAxes[index].ticks.stepSize = modStepSize;
+
     }
   }
 
@@ -418,14 +711,12 @@ export class PatientDetailsPage implements OnInit, OnDestroy {
     const modal = await this.modalController.create({
       component: ManageVitalsPage    
     });
-    modal.onDidDismiss().then((data) => {
-        let formContext = this.formContext;
-        formContext.modalName = undefined;
-        formContext.modalAction = undefined;
-        this.session.setFormContext(formContext);
-      });
-
+    modal.onDidDismiss().then((data) => {      
+      let formContext = this.formContext;
+      formContext.modalName = undefined;
+      formContext.modalAction = undefined;
+      this.session.setFormContext(formContext);
+    });
     return await modal.present();
   }
-
 }

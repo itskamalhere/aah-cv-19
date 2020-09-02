@@ -30,11 +30,15 @@ $radial-page: var(--radial-page);
     --color: #000000;
   }
 
+  ion-checkbox {
+    --background: #ffffff;
+  }
+
   ion-input {
-    --background: lightgrey;
+    --background: #f2f2f2;
     border-radius: 25px;
     width: 70%;
-    margin: auto;    
+    margin: auto;
   }
 
   p {

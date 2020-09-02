@@ -10,10 +10,12 @@ export interface ChartConfig {
     chartColors: Color[];
     showLegend: boolean;
 }
+
 export interface VitalsMetadata {
     id: string;
     label: string;
     chartOptions: {
+        tooltips?: any,
         responsive: true,
         scales?: ChartScales,
         title?: {
@@ -21,7 +23,6 @@ export interface VitalsMetadata {
             text: 'Temperature Monitoring Chart'
         }
     };
-
 }
 
 export const DAY_TIMESCALE: TimeScale = {
@@ -37,7 +38,7 @@ export const WEEK_TIMESCALE: TimeScale = {
     displayFormats: {
         day: 'MMM D'
     },
-    tooltipFormat:'MMM D'
+    tooltipFormat: 'MMM D h:mm a'
 };
 
 export const MONTH_TIMESCALE: TimeScale = {
@@ -46,7 +47,7 @@ export const MONTH_TIMESCALE: TimeScale = {
     displayFormats: {
         day: 'MMM D'
     },
-    tooltipFormat:'MMM D'
+    tooltipFormat: 'MMM D h:mm a'
 };
 
 export const YEAR_TIMESCALE: TimeScale = {
@@ -63,6 +64,10 @@ export class VitalsConfig {
             id: 'spo2',
             label: 'SPO2',
             chartOptions: {
+                tooltips: {
+                    mode: 'index',
+                    intersect: true,
+				},
                 responsive: true,
                 scales: {
                     yAxes: [{
@@ -105,6 +110,10 @@ export class VitalsConfig {
             id: 'temperature',
             label: 'Temperature',
             chartOptions: {
+                tooltips: {
+                    mode: 'index',
+                    intersect: true,
+				},
                 responsive: true,
                 scales: {
                     yAxes: [{
@@ -148,15 +157,19 @@ export class VitalsConfig {
             id: 'heartRate',
             label: 'Heart Rate',
             chartOptions: {
+                tooltips: {
+                    mode: 'index',
+                    intersect: true,
+				},
                 responsive: true,
                 scales: {
                     yAxes: [{
                         gridLines: {
-                            display: true                           
+                            display: true
                         },
                         scaleLabel: {
                             display: true,
-                            labelString: "Heart Rate"                           
+                            labelString: "Heart Rate"
                         },
                         type: 'linear',
                         ticks: {
@@ -168,11 +181,11 @@ export class VitalsConfig {
                     xAxes: [{
                         display: true,
                         gridLines: {
-                            display: true                            
+                            display: true
                         },
                         scaleLabel: {
                             display: true,
-                            labelString: "Time"                           
+                            labelString: "Time"
                         },
                         type: 'time',
                         time: {
@@ -185,11 +198,61 @@ export class VitalsConfig {
                     }]
                 }
             }
-        },        
+        },
+        {
+            id: 'respiration',
+            label: 'Breath Rate',
+            chartOptions: {
+                tooltips: {
+                    mode: 'index',
+                    intersect: true,
+				},
+                responsive: true,
+                scales: {
+                    yAxes: [{
+                        gridLines: {
+                            display: true
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Breath Rate (rpm)"
+                        },
+                        type: 'linear',
+                        ticks: {
+                            max: 60,
+                            min: 10,
+                            stepSize: 10
+                        }
+                    }],
+                    xAxes: [{
+                        display: true,
+                        gridLines: {
+                            display: true
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: "Time"
+                        },
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'h:mm a'
+                            },
+                            tooltipFormat:'h:mm a'
+                        }
+                    }]
+                }
+            }
+        },                
         {
             id: 'bpSystolic|bpDiastolic',
             label: 'Systolic|Diastolic',
             chartOptions: {
+                tooltips: {
+                    mode: 'index',
+                    intersect: true,
+				},
                 responsive: true,
                 scales: {
                     yAxes: [{                        
@@ -248,6 +311,10 @@ export class VitalsConfig {
             id: 'bloodSugar',
             label: 'Blood Sugar',
             chartOptions: {
+                tooltips: {
+                    mode: 'index',
+                    intersect: true,
+				},
                 responsive: true,
                 scales: {
                     yAxes: [{

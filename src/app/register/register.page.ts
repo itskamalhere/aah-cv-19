@@ -20,6 +20,8 @@ import { FirebaseX } from "@ionic-native/firebase-x/ngx";
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { ValidationService } from '../services/validation.service';
 import { LoadingController } from '@ionic/angular';
+import { AngularFireFunctions } from '@angular/fire/functions';
+import { first } from 'rxjs/operators';
 
 
 @Component({
@@ -45,8 +47,8 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
   fsCredential;  
   numbers: string[] = ["1","2","3","4","5","6","7","8","9"];
   zero: string = "0";
-  setCode: string;
-  confirmCode: string;
+  setCode: string = "";
+  confirmCode: string = "";
   recaptchaVerifier;
   @ViewChild("statusTemplate") private statusTemplate: TemplateRef<object>;
   @ViewChild("registerTemplate") private registerTemplate: TemplateRef<object>;
@@ -70,7 +72,8 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     private auth: AngularFireAuth,
     private firebase: FirebaseX,
     private validationService: ValidationService,
-    private loadingController: LoadingController
+    private loadingController: LoadingController,
+    private functions: AngularFireFunctions
     ) {}
 
   ngOnInit() {
@@ -171,12 +174,12 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
         console.log("OTP sent");
         this.loadingController.dismiss();
         me.fsCredential = credential;
+        me.viewTemplate = me.otpTemplate;
+        me.statusHeader = "Enter OTP";
+        me.statusLabel = "awaiting OTP submission";
         if(credential.instantVerification){
-          me.signInWithOTP("");
-        }else {
-          me.viewTemplate = me.otpTemplate;
-          me.statusHeader = "Enter OTP";
-          me.statusLabel = "awaiting OTP submission";
+          console.log("Instant Verification");
+          me.signInWithOTP("",true);
         }
       }, (err) => {
         console.log("OTP error: "+err);
@@ -203,22 +206,37 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  async signInWithOTP(otp: string) {
+  async signInWithOTP(otp: string,isInstant: boolean) {
     console.log(otp);
     const me = this;
     await this.presentLoading("Verifying OTP...");
-    if(otp && otp.length > 0 && this.session.isHybrid()){
-      this.fsCredential.code = otp;
-    }
-    if(this.session.isHybrid()) {
-      this.firebase.signInWithCredential(this.fsCredential).then(() => {
+    if(this.session.isHybrid() && !isInstant) {
+      const credential = firebase.auth.PhoneAuthProvider.credential(this.fsCredential.verificationId, otp);
+      this.auth.signInWithCredential(credential).then(() => {
         console.log("OTP user verified");
-        this.auth.signInAnonymously().then(() => {
-          this.loadingController.dismiss();
-          this.otpSubject.next(OTP_VERIFICATION.SUCCESS);
-        });
+        this.loadingController.dismiss();
+        this.otpSubject.next(OTP_VERIFICATION.SUCCESS);
       }, (err) => {
         console.log("OTP user verification error: " + err);
+        this.loadingController.dismiss();
+        me.statusLabel = err;
+        this.otpSubject.next(OTP_VERIFICATION.FAILED);
+      });
+    } else if (this.session.isHybrid() && isInstant) {
+      this.functions.httpsCallable("getCustomToken")({uid:this.mobileNumber}).pipe(first())
+      .subscribe(resp => {
+        this.auth.signInWithCustomToken(resp.message).then((cred) => {
+          console.log("instant user verified using custom token");
+          this.loadingController.dismiss();
+          this.otpSubject.next(OTP_VERIFICATION.SUCCESS);
+        }, (err) => {
+          console.log("instant user verification error using custom token:"+err);
+          this.loadingController.dismiss();
+          me.statusLabel = err;
+          this.otpSubject.next(OTP_VERIFICATION.FAILED);
+        });
+      }, err => {
+        console.error({ err });
         this.loadingController.dismiss();
         me.statusLabel = err;
         this.otpSubject.next(OTP_VERIFICATION.FAILED);
@@ -245,7 +263,7 @@ export class RegisterPage implements OnInit, OnDestroy, AfterViewInit {
       record.gcmToken = this.session.getGcmToken();      
       this.firebaseService.updateUser(this.session.getUser().id, record).then((res) => {
         console.log("updateUserDetails success");
-        this.passcodeSubject.next(PASSCODE_SETTING.PENDING);
+        me.passcodeSubject.next(PASSCODE_SETTING.PENDING);
       }, (err) => {
         console.log("updateUserDetails error: "+err);
         me.statusLabel = err;

@@ -48,3 +48,35 @@
     -ms-user-select: text;
     user-select: text;
 }
+
+.cropper {
+    color: #ffffff !important;
+}
+
+.square {    
+    background: #ffffff !important;
+}
+
+image-cropper div:first-child {
+    height: 100% !important;
+}
+
+image-cropper div img.source-image.ng-star-inserted {
+  width: 70% !important;
+  height: 70% !important;
+  object-fit: contain;
+  transition: all 1s ease !important;
+}
+
+// image-cropper div:first-child {
+//     //align-self: center !important;//     
+// }
+
+// image-cropper div img {
+//     object-fit: contain;
+//     transition: all 0.3s ease !important;
+//     width: 300px !important;
+//     height: 300px !important;
+//     width: var(--canvas-img-width) !important;
+//     height: var(--canvas-img-height) !important;
+// }

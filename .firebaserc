@@ -11,6 +11,7 @@
   "projects": {
     "default": "aah-cv-19",
     "AAH-PROD": "aah-app-7ad54",
-    "aah-cv-19": "aah-cv-19"
+    "aah-cv-19": "aah-cv-19",
+    "aah-app": "aah-app-7ad54"
   }
 }

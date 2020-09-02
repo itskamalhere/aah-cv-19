@@ -20,29 +20,29 @@ import { AppPreferences } from '@ionic-native/app-preferences/ngx';
 import { SessionService } from './services/session.service';
 import { ServiceWorkerModule } from '@angular/service-worker';
 
+
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
   imports: [
-    BrowserModule,
-    BrowserAnimationsModule,    
-    IonicModule.forRoot({     
+    BrowserModule,    
+    BrowserAnimationsModule,
+    //IonicModule.forRoot(),
+    IonicModule.forRoot({
       scrollPadding: false,
       scrollAssist: false
     }),
     AppRoutingModule,
-    AngularFireModule.initializeApp(environment.firebaseConfigDev),
+    AngularFireModule.initializeApp(environment.firebaseConfig),
     AngularFirestoreModule,
-    //AngularFirestoreModule.enablePersistence(),
     AngularFireStorageModule,
     AngularFireAuthModule,
-    AngularFireFunctionsModule,    
+    AngularFireFunctionsModule,
     ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
   ],
   providers: [
     FingerprintAIO,FirebaseX,AppPreferences,SessionService,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
-    //{ provide: ORIGIN, useValue: 'https://aah-cv-19.web.app' }
   ],
   bootstrap: [AppComponent]
 })

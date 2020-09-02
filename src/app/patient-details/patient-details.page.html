@@ -7,18 +7,23 @@
         <ion-title *ngIf="userData.firstName">{{userData.firstName+' '+userData.lastName}}</ion-title>
     </ion-toolbar>
     <ion-toolbar>
-        <ion-segment [(ngModel)]="segment">
+        <ion-segment [(ngModel)]="segment" (ionChange)="segmentChanged($event)">
             <ion-segment-button value="details">
                 <ion-label>Details</ion-label>
             </ion-segment-button>
             <ion-segment-button *ngIf="formContext.userType=='Patient'" value="reports">
                 <ion-label>Reports</ion-label>
             </ion-segment-button>
+            <ng-container *hasPermissions="['can-view-discussions'];contains:true">
+                <ion-segment-button *ngIf="formContext.userType=='Patient'" value="discussions">
+                    <ion-label>Discussions</ion-label>
+                </ion-segment-button>
+            </ng-container>
         </ion-segment>
     </ion-toolbar>
 </ion-header>
 
-<ion-content [forceOverscroll]="true">
+<ion-content [forceOverscroll]="true" #content>
     <div [ngSwitch]="segment">
         <div *ngSwitchCase="'details'">
             <ng-container [ngSwitch]="(loaded && formContext.userType=='Patient')?'Patient'
@@ -36,12 +41,16 @@
                     <h3>{{userData.firstName+" "+userData.lastName}}</h3>
                     <p>UH ID - {{userData.uhid}}</p>
                   </ion-label>
-                  <ion-button *hasPermissions="['can-edit-patient'];contains:true" fill="clear" slot="end" (click)="EditUser()">
-                    <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-                  </ion-button>
+                  <ion-buttons slot="end">
+                    <ion-button *hasPermissions="['can-edit-patient'];contains:true" color= "primary" fill="clear" (click)="editUser()">
+                        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                      </ion-button>
+                      <ion-button *hasPermissions="['can-delete-patient'];contains:true" color= "primary" fill="clear" (click)="deleteUser()">
+                        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                      </ion-button>
+                  </ion-buttons>
               </ion-item>
-              </ion-card-header>
-        
+              </ion-card-header>        
               <ion-card-content>
                   <ion-grid>
 
@@ -96,9 +105,14 @@
                   <ion-label class="selectable">
                     <h3>{{userData.firstName+" "+userData.lastName}}</h3>
                   </ion-label>
-                  <ion-button *hasPermissions="['can-edit-staff'];contains:true" fill="clear" slot="end" (click)="EditUser()">
-                    <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-                  </ion-button>
+                  <ion-buttons slot="end">
+                    <ion-button *hasPermissions="['can-edit-staff'];contains:true" color= "primary" fill="clear" (click)="editUser()">
+                        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                      </ion-button>
+                      <ion-button *hasPermissions="['can-delete-staff'];contains:true" color= "primary" fill="clear" (click)="deleteUser()">
+                        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                      </ion-button>
+                  </ion-buttons>
               </ion-item>
               </ion-card-header>
         
@@ -137,16 +151,16 @@
           
           <ng-container *ngSwitchCase="'feedLoading'">
             <ion-card class="ion-card-active">
-              <ion-card-header>        
+              <ion-card-header>
                 <ion-item color="primary-contrast">
                     <ion-avatar slot="start">
                       <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
-                    </ion-avatar>            
+                    </ion-avatar>
                     <ion-label class="selectable">
                       <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
                       <p><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></p>
                     </ion-label>
-                </ion-item>          
+                </ion-item>     
               </ion-card-header>
               <ion-card-content>
                   <ion-grid>
@@ -211,53 +225,58 @@
             </ion-label>
         </ion-item>
 
-            <ion-card *ngFor="let vital of userData.vitals" class="ion-card-vital">
-                <ion-card-header>
-                    <ion-card-subtitle>{{vital.submittedDate | timeformat}}  - {{vital.submittedBy}} (submitted by)</ion-card-subtitle>
-                </ion-card-header>
-
-                <ion-card-content>
-                    <ion-grid>
-                        <ion-row>                            
-                            <ion-col *ngIf="vital.spo2" size="6">
-                                <ion-chip>
-                                    <ion-icon name="flower-outline"></ion-icon>
-                                    <ion-label> SPO2 - {{vital.spo2}}</ion-label>
-                                </ion-chip>
-                            </ion-col>
-                            <ion-col *ngIf="vital.bpSystolic" size="6">
-                                <ion-chip>
-                                    <ion-icon name="analytics-outline"></ion-icon>
-                                    <ion-label> BP - {{vital.bpSystolic+'/'}}{{vital.bpDiastolic}}</ion-label>
-                                </ion-chip>
-                            </ion-col>
-                            <ion-col *ngIf="vital.heartRate" size="3">
-                                <ion-chip>
-                                    <ion-icon name="heart-outline"></ion-icon>
-                                    <ion-label>{{vital.heartRate}}</ion-label>
-                                </ion-chip>
-                            </ion-col>
-                            <ion-col *ngIf="vital.temperature" size="4">
-                                <ion-chip>
-                                    <ion-icon name="thermometer-outline"></ion-icon>
-                                    <ion-label>{{vital.temperature}}°F</ion-label>
-                                </ion-chip>
-                            </ion-col>
-                            <ion-col *ngIf="vital.bloodSugar" size="5">
-                                <ion-chip>
-                                    <ion-icon name="water-outline"></ion-icon>
-                                    <ion-label>{{vital.bloodSugar}} mg/dL</ion-label>
-                                </ion-chip>
-                            </ion-col>
-                        </ion-row>
-                        <ion-row *ngIf="vital.note">
-                            <ion-col size="12">
-                                <ion-text> Notes - {{vital.note}}</ion-text>
-                            </ion-col>
-                        </ion-row>
-                    </ion-grid>
-                </ion-card-content>
-            </ion-card>
+        <ion-card *ngFor="let vital of userData.vitals" class="ion-card-vital">
+            <ion-card-header>
+                <ion-card-subtitle>{{vital.submittedDate | timeformat}}  - {{vital.submittedBy}} (submitted by)</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+                <ion-grid>
+                    <ion-row>
+                        <ion-col *ngIf="vital.spo2" size="5">
+                            <ion-chip>
+                                <ion-icon name="flower-outline"></ion-icon>
+                                <ion-label> SPO2 - {{vital.spo2}}</ion-label>
+                            </ion-chip>
+                        </ion-col>
+                        <ion-col *ngIf="vital.bpSystolic" size="6">
+                            <ion-chip>
+                                <ion-icon name="analytics-outline"></ion-icon>
+                                <ion-label> BP - {{vital.bpSystolic+'/'}}{{vital.bpDiastolic}}</ion-label>
+                            </ion-chip>
+                        </ion-col>                             
+                        <ion-col *ngIf="vital.respiration" size="3">
+                            <ion-chip>
+                                <ion-icon name="lungs-outline"></ion-icon>
+                                <ion-label>{{vital.respiration}}</ion-label>
+                            </ion-chip>
+                        </ion-col>
+                        <ion-col *ngIf="vital.heartRate" size="3">
+                            <ion-chip>
+                                <ion-icon name="heart-outline"></ion-icon>
+                                <ion-label>{{vital.heartRate}}</ion-label>
+                            </ion-chip>
+                        </ion-col>
+                        <ion-col *ngIf="vital.temperature" size="4">
+                            <ion-chip>
+                                <ion-icon name="thermometer-outline"></ion-icon>
+                                <ion-label>{{vital.temperature}}°F</ion-label>
+                            </ion-chip>
+                        </ion-col>                           
+                        <ion-col *ngIf="vital.bloodSugar" size="5">
+                            <ion-chip>
+                                <ion-icon name="water-outline"></ion-icon>
+                                <ion-label>{{vital.bloodSugar}} mg/dL</ion-label>
+                            </ion-chip>
+                        </ion-col>
+                    </ion-row>
+                    <ion-row *ngIf="vital.note">
+                        <ion-col size="12">
+                            <ion-text> Notes - {{vital.note}}</ion-text>
+                        </ion-col>
+                    </ion-row>
+                </ion-grid>
+            </ion-card-content>
+        </ion-card>
         </div>
         <div *ngSwitchCase="'reports'">
             <ion-segment [(ngModel)]="displayBy" (ionChange)="changeDisplayBy()">
@@ -270,9 +289,9 @@
                 <ion-segment-button class="ion-segment-button-css" value="month">
                     <ion-label color="dark">Month</ion-label>
                 </ion-segment-button>
-                <ion-segment-button class="ion-segment-button-css" value="year">
+                <!-- <ion-segment-button class="ion-segment-button-css" value="year">
                     <ion-label color="dark">Year</ion-label>
-                </ion-segment-button>
+                </ion-segment-button> -->
             </ion-segment>
             <ion-grid>
                 <ion-row>
@@ -342,8 +361,59 @@
                 </ion-grid>
             </ion-list>
         </div>
+        <div *ngSwitchCase="'discussions'">
+            <ng-container [ngSwitch]="convLoaded?'Discussions':'convLoading'">
+                <ng-container *ngSwitchCase="'Discussions'">
+                    <ion-grid>
+                        <ng-container *ngFor="let conv of convData.conversations">
+                            <ion-row>
+                                <ion-col size="9" [offset]="conv.creatorName==sessionUserName?2.4:0">
+                                    <ion-card class="ion-card-discussion ion-align-self-center">
+                                        <ion-header class="ion-no-border">
+                                         <ion-card-subtitle color="primary" class="margin-bottom-none">{{conv.creatorName}}</ion-card-subtitle>
+                                        </ion-header>
+                                        <div *ngIf="conv.attachmentUrl" class="img-container">
+                                            <!-- <div class="img-wrapper" [defaultImage]="'/assets/images/loading.gif'" [lazyLoad]="conv.attachmentUrl" (click)="openImage(conv.attachmentUrl)"></div> -->
+                                            <div class="img-wrapper" [lazyLoad]="conv.attachmentUrl" (click)="openImage(conv.attachmentUrl)">
+                                                <div class="spinner-wrapper">
+                                                    <ion-spinner class="lazy-spinner" [name]="platform.is('ios')?'lines':'crescent'" color="primary"></ion-spinner>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <ion-card-content *ngIf="conv.message"><ion-text><h3>{{conv.message}}</h3></ion-text></ion-card-content>
+                                    </ion-card>
+                                    <ion-footer class="ion-no-border ion-text-end" style="margin-left: 10px !important;">
+                                        <ion-card-subtitle>{{conv.creationDate | timeformat}}</ion-card-subtitle>                                        
+                                    </ion-footer>
+                                </ion-col>
+                            </ion-row>
+                        </ng-container>
+                    </ion-grid>                    
+                </ng-container>
+                <ng-container *ngSwitchCase="'convLoading'">
+                    <ng-container *ngFor="let item of [1,2,3,4,5,6]" #convData>
+                        <ion-card class="ion-card-discussion margin-bottom-none">
+                            <ion-header class="ion-no-border">
+                             <ion-item color="primary-contrast" lines="none">
+                                <ion-label><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-label>
+                            </ion-item>
+                            </ion-header>
+                            <ion-card-content class="padding-top-none">
+                                <ion-text><h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3></ion-text>
+                                <ion-text><h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3></ion-text>
+                            </ion-card-content>
+                        </ion-card>
+                        <ion-footer class="ion-no-border">
+                            <ion-item color="primary-contrast" lines="none">
+                                <ion-label slot="end"><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></ion-label>
+                            </ion-item>
+                        </ion-footer>
+                    </ng-container>
+                </ng-container>
+            </ng-container>
+        </div>
     </div>
-    <ng-container *hasPermissions="['can-add-vital'];contains:true">        
+    <ng-container *hasPermissions="['can-add-vital'];contains:true">
         <ion-fab *ngIf="segment=='details' && formContext.userType=='Patient'" (click)="showVitalsPage()" vertical="bottom" horizontal="end" slot="fixed">
             <ion-fab-button>
                 <ion-icon name="pulse"></ion-icon>
@@ -358,3 +428,30 @@
     </ion-fab> -->
 
 </ion-content>
+
+<ion-footer *ngIf="segment=='discussions'" class="ion-no-border">
+    <ion-grid>
+        <ion-row>
+            <ion-col size="10.5" class="ion-align-self-center">
+                <ion-item class="item-css ion-no-padding ion-align-self-center" lines="none">
+                    <ion-buttons>
+                        <ion-button color= "primary" fill="clear" (click)="addImage(source.Photos)">
+                            <ion-icon slot="icon-only" name="images"></ion-icon>
+                        </ion-button>
+                    </ion-buttons>                    
+                    <ion-textarea rows="1" auto-grow="true" placeholder="Type here" [(ngModel)]="convMessage"></ion-textarea>
+                </ion-item>
+            </ion-col>
+            <ion-col size="1.5" class="ion-no-padding ion-text-center ion-align-self-center">
+                <ion-buttons>
+                    <ion-button *ngIf="convMessage&&convMessage.trim().length>0" slot="start" color= "primary" fill="clear" (click)="addDiscussion()">
+                        <ion-icon slot="icon-only" name="send"></ion-icon>
+                    </ion-button>
+                    <ion-button *ngIf="!convMessage||(convMessage&&convMessage.trim().length==0)" slot="start" color= "primary" fill="clear" (click)="addImage(source.Camera)">
+                        <ion-icon slot="icon-only" name="camera"></ion-icon>
+                    </ion-button>
+                </ion-buttons>
+            </ion-col>
+        </ion-row>
+    </ion-grid>   
+</ion-footer>

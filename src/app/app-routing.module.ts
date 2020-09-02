@@ -37,6 +37,10 @@ const routes: Routes = [
     path: 'manage-vitals',
     loadChildren: () => import('./manage-vitals/manage-vitals.module').then( m => m.ManageVitalsPageModule)
   },
+  {
+    path: 'manage-image',
+    loadChildren: () => import('./manage-image/manage-image.module').then( m => m.ManageImagePageModule)
+  },
 ];
 
 @NgModule({

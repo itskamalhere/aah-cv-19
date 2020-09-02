@@ -204,8 +204,7 @@ export class PatientListPage implements OnInit, AfterViewInit, OnDestroy {
 
   selectSearch() {
     this.searchOpen = true;
-    {setTimeout(() =>
-    this.searchBar.setFocus(), 200);}
+    setTimeout(() => this.searchBar.setFocus(), 200);    
   }
 
   cancelSearch() {

@@ -2,10 +2,14 @@
 // http://ionicframework.com/docs/theming/
 
 /** Ionic CSS Variables **/
-:root {  
+:root {
+  --cropper-outline-color: rgba(0,0,0,0.3);
+  --cropper-overlay-color: rgba(0,0,0,0.3);
+  --canvas-img-width: 100%;
+  --canvas-img-height: 100%;
   --ion-font-family:  'OpenSans'!important;
   /** primary **/
-  --ion-color-primary: #8d4d9a;  
+  --ion-color-primary: #8d4d9a;
   --ion-color-primary-rgb: 141,77,154;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255,255,255;

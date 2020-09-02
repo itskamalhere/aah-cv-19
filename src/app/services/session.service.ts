@@ -22,6 +22,7 @@ export class SessionService implements OnInit, OnDestroy, CanActivate {
   mobileNumber: string;
   passCode: string;
   deviceId: string;
+  modalCalled: boolean = false;
   registrationSubject: BehaviorSubject<REGISTRATION> = new BehaviorSubject(REGISTRATION.NOT_STARTED);
   authenticationSubject: BehaviorSubject<AUTHENTICATION> = new BehaviorSubject(AUTHENTICATION.NOT_STARTED);
 
@@ -58,12 +59,14 @@ export class SessionService implements OnInit, OnDestroy, CanActivate {
 
   async showUpdateAlert() {
     const toast = await this.toastController.create({
-      header: 'New Version Available',      
-      position: 'bottom',
+      header: "New Version Available",
+      position: "bottom",
+      animated: true,
+      color: "primary",
       buttons: [
         {
-          text: 'Update',
-          role: 'cancel',
+          text: "Update",
+          role: "cancel",
           handler: () => {
             this.updates.activateUpdate().then(() => {
               document.location.reload();
@@ -184,6 +187,14 @@ export class SessionService implements OnInit, OnDestroy, CanActivate {
     return this.passCode;
   }
 
+  setModalCalled(modalCalled: boolean) {
+    this.modalCalled = modalCalled;
+  }
+
+  isModalCalled() {    
+    return this.modalCalled;
+  }
+
 }
 
 export enum REGISTRATION {
@@ -206,10 +217,10 @@ export enum EFFECT {
   MEDIUM = 1
 }
 
-export interface FormContext {  
+export interface FormContext {
   user: User;
   userType: FORM_USER;
-  action: FORM_ACTION;
+  action: FORM_ACTION;  
   modalName: FORM_MODAL;
   modalAction: MODAL_ACTION;
 }
@@ -226,7 +237,7 @@ export enum FORM_USER {
 
 export enum FORM_MODAL {
   VITAL = "Vital",
-  CHAT = "Chat"
+  IMAGE = "Image"
 }
 
 export enum MODAL_ACTION {

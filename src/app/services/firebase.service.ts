@@ -1,29 +1,33 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection, DocumentReference } from '@angular/fire/firestore';
-import { map } from 'rxjs/operators';
+import { AngularFireStorage } from '@angular/fire/storage';
+import { map, last, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
-import { User, UserData, Vital } from "../model/user-model";
+import { User, UserData, Vital, ConvData, Conv, File } from "../model/user-model";
 import { Subscription } from 'rxjs';
-import * as firebase from 'firebase';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirebaseService { 
 
+  downloadURL: any;
   private fetchSub: Subscription;
   
   userCollectionName = "users";
   roleCollectionName = "roles";
   vitalCollectionName = "vitals";
-  commentCollectionName = "comments";
+  convCollectionName = "conversations";
 
   userDb = this.firestore.collection(this.userCollectionName);
   roleDb = this.firestore.collection(this.roleCollectionName);
   vitalDb = this.firestore.collection(this.vitalCollectionName);
-  commentDb = this.firestore.collection(this.commentCollectionName);
+  convDb = this.firestore.collection(this.convCollectionName);
 
-  constructor(private firestore: AngularFirestore) {}
+  constructor(
+    private firestore: AngularFirestore,
+    private storage: AngularFireStorage
+    ) {}
 
   fetchUsersbyField(fieldName: string, fieldValue: string, operator: any) {   
     let query: AngularFirestoreCollection<any>;
@@ -92,21 +96,7 @@ export class FirebaseService {
         return {id,ref,data};
       })
     );
-  }
-
-  // fetchUserbyId$(id: string) {
-  //   let query = this.firestore.doc(this.userCollectionName+"/" + id);
-  //   return query.snapshotChanges().pipe(
-  //     map(snapshot => {
-  //       return snapshot.(a => {
-  //         const id = a.payload.doc.id;
-  //         const ref = a.payload.doc.ref as DocumentReference;
-  //         const data: UserData = a.payload.doc.data() as UserData;
-  //         return {id,ref,data};
-  //       });
-  //     })
-  //   );
-  // }
+  }  
 
   lookup(fnParams: any) {
     let query: AngularFirestoreCollection<any>;
@@ -150,10 +140,10 @@ export class FirebaseService {
     );
   }
 
-  fetchUsers(userType: string, assignedTo: string) {        
+  fetchUsers(userType: string, assignedTo: string) {
     let query = this.firestore.collection(this.userCollectionName, ref => ref.where("userType", "==", userType).
     orderBy("modifyDate","desc"));
-    if(assignedTo) {      
+    if(assignedTo) {
       query = this.firestore.collection(this.userCollectionName, ref => ref.where("userType", "==", userType)
       .where("assignedTo","array-contains",assignedTo)
       .where("status","==","Active").
@@ -184,11 +174,24 @@ export class FirebaseService {
             this.fetchSub.unsubscribe();
           }
         });
-      } catch (e) {
-        reject(e);
+      } catch (err) {
+        console.error(err);
+        reject(err);
       }
     });
   }
+
+  fetchConversations(id: string) {
+    let query = this.firestore.doc(this.convCollectionName+"/" + id);
+    return query.snapshotChanges().pipe(
+      map(a => {
+        const id = a.payload.id;
+        const ref = a.payload.ref as DocumentReference;
+        const data: ConvData = a.payload.data() as ConvData;
+        return {id,ref,data};
+      })
+    );
+  } 
 
   addUser(record: UserData) {
     record.role = this.firestore.doc(this.roleCollectionName+"/"+record.role).ref;
@@ -206,13 +209,38 @@ export class FirebaseService {
     return this.firestore.doc(this.userCollectionName + '/' + recordId).update(record);
   }
 
-  deleteUser(recordId) {
+  deleteUser(recordId: string) {
     return this.firestore.doc(this.userCollectionName + '/' + recordId).delete();
   }
 
   addVital(recordId: string, vital: Vital) {
-    let doc = this.firestore.doc(this.userCollectionName + '/' + recordId);    
+    let doc = this.firestore.doc(this.userCollectionName + '/' + recordId);
     return doc.update({vitals: firestore.FieldValue.arrayUnion(vital),modifyDate:new Date()});
   }
+
+  addConversation(recordId: string, conv: Conv) {
+    let doc = this.firestore.doc(this.convCollectionName + '/' + recordId);
+    return doc.set({conversations: firestore.FieldValue.arrayUnion(conv)},{merge: true});
+  }
+
+  uploadFile(file: File) {
+    return new Promise<string>((resolve, reject) => {
+    try{
+      var metadata = {
+        contentType: file.contentType,
+      };
+      const fileRef = this.storage.ref(`/users/${file.userId}/${file.name}`);
+      const task = fileRef.putString(file.data,"data_url",metadata);
+      task.snapshotChanges().pipe(
+        last(),switchMap(() => fileRef.getDownloadURL())
+        ).subscribe((url) =>{
+          resolve(url);
+        });
+      } catch(err) {
+        console.error(err);
+        reject(err);
+      }
+    });
+  };
 
 }

@@ -1,10 +1,10 @@
 <ion-header class="ion-no-border">
   <ion-toolbar>
-    <ion-buttons slot="end">      
+    <ion-buttons slot="end">
       <ion-button fill="clear" (click)="close()">
         <ion-icon slot="icon-only" name="close"></ion-icon>
       </ion-button>
-    </ion-buttons>    
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -39,11 +39,9 @@
                 {{option}}
               </ion-select-option>
             </ion-select>
-
-            <ion-datetime *ngIf="attribute.attrType == 'date'" placeholder="Choose Date" min="{{attribute.attrMin}}" max="{{attribute.attrMax}}"
-            id="{{attribute.attrName}}"
-            displayFormat="DD MMM, YYYY"
-            monthShortNames="Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec" formControlName="{{attribute.attrName}}">
+            
+            <ion-datetime *ngIf="attribute.attrType == 'date'" placeholder="Choose Time" min="{{attribute.attrMin}}" max="{{attribute.attrMax}}"
+            id="{{attribute.attrName}}" displayFormat="HH:mm" formControlName="{{attribute.attrName}}">
             </ion-datetime>
 
             <ion-label color="primary" [ngClass]="attribute.attrRequired?'required':''" *ngIf="attribute.attrType=='text'||attribute.attrType=='decimal'||attribute.attrType=='tel'" position="floating">

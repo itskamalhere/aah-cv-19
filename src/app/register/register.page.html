@@ -1,10 +1,10 @@
 <ion-header>
   <ion-toolbar class="ion-text-center ion-align-self-end">
-    <img src="/assets/images/aah_1024x500.png" class="image-css"><img>
+    <img src="/assets/images/logo.png" class="image-css"><img>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">
-  <div id="container" [@slideInOut] *valueChange="statusHeader">   
+  <div id="container" [@slideInOut] *valueChange="statusHeader">
     <ng-container *ngTemplateOutlet="viewTemplate"></ng-container>
   </div>
   <div *ngIf="!session.isHybrid()" id="recaptcha-container"></div>
@@ -23,11 +23,14 @@
     <p><ion-input placeholder="Enter 10 digit mobile number" autofocus="true"
     type="tel" #mobileNumber formControlName="mobileNumber"></ion-input></p>
     <control-messages [control]="mobileForm.get('mobileNumber')"></control-messages>
-    <p><ion-button shape="round" (click) = "sendOTP(mobileNumber.value.toString())" [disabled]="mobileForm.invalid">Register</ion-button></p>
+    <ion-checkbox #privacy style="vertical-align: middle"></ion-checkbox>
+    <ion-label style="vertical-align: middle">&nbsp;I have read and accept the <a href="https://aah-general.web.app/privacy-policy" target="_blank">Privacy Policy</a>
+    </ion-label>
+    <p><ion-button shape="round" (click) = "sendOTP(mobileNumber.value.toString())" [disabled]="mobileForm.invalid || !privacy.checked">Register</ion-button></p>
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
-    </ion-text>    
-  </form>    
+    </ion-text>
+  </form>
 </ng-template>
 
 <ng-template #otpTemplate>
@@ -35,7 +38,7 @@
     <p><ion-text><strong>{{ statusHeader }}</strong></ion-text></p>
     <p><ion-input placeholder="Enter OTP" type="tel" autofocus="true" formControlName="otp" #otp></ion-input></p>
     <control-messages [control]="otpForm.get('otp')"></control-messages>
-    <p><ion-button shape="round" (click) = "signInWithOTP(otp.value.toString())" [disabled]="otpForm.invalid">Submit</ion-button></p>
+    <p><ion-button shape="round" (click) = "signInWithOTP(otp.value.toString(),false)" [disabled]="otpForm.invalid">Submit</ion-button></p>
     <ion-text style="padding-top:0; white-space: pre-wrap;">
       <p>{{ statusLabel }}</p>
     </ion-text>

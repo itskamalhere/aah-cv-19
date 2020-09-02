@@ -135,7 +135,7 @@ export class UserManagePage implements OnInit {
     return record;
   }
 
-  subscribeUsers(record: any, id: string, close: boolean) {
+  async subscribeUsers(record: any, id: string, close: boolean) {
     this.getTokens(record).then(tokens => {      
       if(tokens && tokens.length > 0) {
         var uhid = this.userForm.get("uhid").value;
